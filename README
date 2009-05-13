@@ -1,0 +1,17 @@
+PyMetric is a network simulation and visualisation tool. It
+allows the user to trace paths through his network, given a
+set of nodes and links with metrics (costs).
+
+It allows the simulation of metric changes, router failures and
+link outages, and provides various information relating to the
+changes in topology and routing.
+
+PyMetric can also show various statistics on the topology, such
+as equal-cost paths, links with assymetric costs, longest paths
+and lots more. It can even suggest some metric changes to help
+the user with traffic engineering.
+
+It still has some assumptions that are IS-IS specific, but they
+are minor and will go away at some point. PyMetric should perform
+its job regardless of the routing protocol used (as long as it
+is a LSP)
