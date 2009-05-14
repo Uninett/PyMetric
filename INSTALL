@@ -1,0 +1,34 @@
+Just install the python-networkx package, and make sure the Python TK
+bindings, NumPy and Matplotlib are all installed. The readline python
+module is also needed.
+
+Matplotlib must support the TkAgg backend, that is be built against
+Tk/Tkinter.
+
+
+On Debian/Ubuntu, just do
+
+  sudo apt-get install python-networkx python-tk python-matplotlib python-numpy
+
+And you should be good to go.
+
+Note: As it *requires* python-networkx version 0.36, you cant use the
+standard Hardy (8.04) packages..
+
+The intrepid package (8.10) should work, you can find it here:
+http://launchpadlibrarian.net/14321890/python-networkx_0.36-2_all.deb
+
+For proper alpha-blended edges the Tk version should be >= 8.5, though
+this is not *required*
+
+Just run metrics.py, giving it a topology-file (etwas.net) as input.
+
+The file should look like this:
+
+*Network networkname
+*Vertices 2
+1 "A"   2.0  2.0   (area "optional routing area")
+2 "B"   5.0  5.0
+*Arcs
+1  2  10 (l "optional label")
+2  1  10
