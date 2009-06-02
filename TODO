@@ -1,0 +1,15 @@
+* Multiedge-stuff?
+* Makefile for png/pdf for web use?
+* Clean up any assumptions about dataset/routing protocol
+* More GUI interaction?
+(* Colormap display of betweenness (both edges and nodes) ?)
+* Make linkload optionally read from file, it should also
+  have options for 'hr', 'day', 'week', 'avg', 'peak' etc.
+* Should cache linkload to file?
+* Display linkload-effects in 'changes'?.
+* Speedups in load calculations now depend on get_path_loads-
+  function (called *a lot*)
+* Make it possible to simulate linkloads.
+* Separate colorschemes 'dark' and 'light' for with-load.
+* Should paths have with-load option?
+
