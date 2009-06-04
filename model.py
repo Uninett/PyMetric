@@ -791,6 +791,8 @@ class Simulation:
       self.linkloads = self.model.linkloads
 
    def stop(self):
+      self.acnodes = set()
+      self.acgroups = {}
       self.active = False
 
    def get_changes(self):
