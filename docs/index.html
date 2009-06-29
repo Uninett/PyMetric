@@ -1,0 +1,136 @@
+<html>
+  <head>
+	<title>PyMetric - Documentation (Work in progress)</title>
+  </head>
+
+  <body>
+	<div style="width: 800px; margin-right: auto, margin-left: auto">
+	<h2>What is it?</h2>
+	<p><strong>PyMetric</strong> is an interactive network simulation and
+       visualisation tool. It allows the user to trace paths through
+       his network, given a set of nodes and links with metrics
+       (costs).
+    </p>
+
+	<p>It allows the simulation of metric changes, router failures and
+       link outages, and provides various information relating to the
+       changes in topology and routing. It can also consider link
+       loads and how changes affect the load distribution.
+	</p>
+
+    <p>PyMetric can also show various statistics on the topology, such
+       as equal-cost paths, links with asymetric costs, longest paths
+       and lots more. It can even suggest some metric changes to help
+       the user with traffic engineering.
+	</p>
+	<div style="width: 30em; clear:all; float:right; position: relative; left:
+	6em;">
+	<a href="path-oslo-svalbard.png"><img alt="Path from oslo-gw to
+	svalbard-gw" src="path-oslo-svalbard-350px.png"></a>
+	  <strong>Figure 1.</strong> Path from oslo-gw to svalbard-gw.
+	</div>
+
+	<h2>Getting started with PyMetric</h2>
+	<p>This section describes some common uses of PyMetric, and should
+	   help in getting started. There is a 'help'-command available,
+	   which describes every command and mode in detail.
+	</p>
+	<h3>Running the program<small>*</small></h3>
+	<p>The program should be run from the command line.:</p>
+	<pre style="padding-left: 2em">$ pymetric (model) (outfile)</pre>
+	<p>It can be given an optional model definition file as an
+	argument. If this is not provided the default configured at
+	install time will be used (if available). When given an explicit
+	model to load a second filename can be given in order to produce
+	a plotfile (e.g. a PNG-image). In this mode the program is not
+	interactive and will terminate after writing the image file.</p>
+
+	<h3>Basic use</h3>
+	<p>The interactive shell provides command history and completion
+	   of commands, options and router names.</p>	  
+	<p>To view the current topology use 'plot'. To trace the path
+       between two nodes use 'path A B'. Note in figure 1 how some
+       links and nodes have more weight/are bigger than others. These
+       have the most shortest paths passing through them, i.e. they
+       are the most used in terms of connectivity.
+	</p>
+	<pre style="padding-left: 2em">
+>>> plot
+>>> path oslo-gw svalbard-gw
+Path from oslo-gw to svalbard-gw:
+  * Cost: 63
+  * Hops: 7
+  * Path:
+     oslo-gw => trd-gw1 => hovedbygget-gw1 => tromso-gw1 => tromso-gw2 =>
+      harstad-gw3 => svalbard-gw
+  * Slowest link:  1Gbit/s
+
+>>>
+    </pre>
+    <p>In order to make changes, make sure you enter simulation mode
+       first. This is done with the 'simulation' (or just 'sim')
+       command.
+	</p>
+	<pre style="padding-left: 2em">
+>>> sim
+Simulation mode active, type 'stop' or 'simulation stop' to end it
+(sim) >>>
+    </pre>
+	<div style="width: 30em; clear:all; float:right; position: relative; left:
+	6em;">
+	<a href="diffpath-elverum-mo.png"><img alt="Difference in path
+	from elverum-gw to mo-gw" src="diffpath-elverum-mo-350px.png"></a>
+	<strong>Figure 2.</strong> Difference in path between elverum-gw
+	and mo-gw.
+	</div>
+	<p>There are three kinds of basic changes you can make:</p>
+	<ul><li>Metric changes, with the 'metric' command</li>
+	    <li>Link failures, with the 'linkfail' command</li>
+		<li>Router failures, with the 'routerfail' command</li>
+	</ul>
+
+	<p>As you make changes, the prompt will show a brief summary of
+	   the effects. Type 'help simulation' to learn what the numbers
+	   mean.
+	</p>
+
+    <p>When in simulation mode you can view the current topology and
+       trace paths with 'simplot' and 'simpath' respectivly. You can
+       view the effects of the simulation with the 'changes' command.
+       If you want a graphical comparison of paths, use the 'diffpath'
+       command while in simulation mode. Example:
+	</p>
+	<pre style="padding-left: 2em">
+(sim) >>> linkfail oslo-gw trd-gw1
+(sim) (1c/58:31:0n/0.16L) >>> diffpath elverum-gw mo-gw
+Path from elverum-gw to mo-gw:
+  * Cost: 80 vs 65
+  * Hops: 8 vs 7
+  * Path:
+     elverum-gw => oslo-gw3 => stolav-gw1 => hovedbygget-gw1 => trd-gw1 => mo-
+     gw1 => mo-gw2 => mo-gw
+  * Slowest link:  1Gbit/s
+    vs.
+     elverum-gw => oslo-gw3 => oslo-gw => trd-gw1 => mo-gw1 => mo-gw2 => mo-gw
+  * Slowest link:  1Gbit/s
+
+(sim) (1c/58:31:0n/0.16L) >>> 
+    </pre>
+
+	<p>As seen in figure 2, the new parts are shown in light blue, the
+	   old parts in yellow and the common parts are shown in a dark
+	   blue color.
+  <div>
+
+	<h2>More documentation to come, including</h2>
+	<h3>Getting information</h3>
+	<h3>Showing and simulating loads</h3>	
+	<h3>Simulating anycast</h3>
+
+	<hr>
+	<p style="font-size: 8pt">* Note that the CVS-version currently has to be run like this: $
+	./metrics.py modelfile.net, as the pymetric startup script is not
+	provided. As soon as a proper release is ready this will change.</p>
+  </body>
+</html>
+	   
