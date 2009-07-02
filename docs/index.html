@@ -426,8 +426,34 @@ utilization    : 15.98%
 
 (sim) (1c/58:31:0n/0:0:0u/0.16L) >>> 
     </pre>
+	<div style="width: 30em; clear:all; float:right; position: relative; left:
+	6em;">
+	<a href="anycast.png"><img alt="Anycast groups" src="anycast-350px.png"></a>
+	  <strong>Figure 6.</strong> Three anycast nodes, and their "members"
+	</div>
 	<h3>Simulating anycast</h3>
-
+	<p>PyMetric can be used for simple anycast simulation. By using
+	   the 'anycast' command you can make nodes announce an anycast
+	   prefix. In the example, oslo-gw7, trd-gw7 and bergen-gw7 are
+	   all said to be announcing the same anycast prefix. We can then
+	   plot how all the nodes are distributed with regards to the
+	   anycast prefix. At the moment only one (unspecified) prefix is
+	   allowed at the same time.
+	</p>
+	<pre style="padding-left: 2em">
+(sim) >>> anycast add oslo-gw7 trd-gw7
+(sim) (2a/35:39m) >>> anycast add bergen-gw7
+(sim) (3a/20:23:31m) >>> anycast
+Current anycast nodes:
+  * oslo-gw7        (23 members)
+  * trd-gw7         (31 members)
+  * bergen-gw7      (20 members)
+(sim) (3a/20:23:31m) >>> 
+    </pre>
+	<p>Note how the prompt once again changes to reflect the current
+	   anycast simulation. In the plot (shown in figure 6) the anycast
+	   nodes are given a stronger color.
+	</p>
 	<hr>
 	<p style="font-size: 8pt">* Note that the CVS-version currently has to be run like this: $
 	./metrics.py modelfile.net, as the pymetric startup script is not
