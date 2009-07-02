@@ -122,8 +122,212 @@ Path from elverum-gw to mo-gw:
 	   blue color.
   <div>
 
-	<h2>More documentation to come, including</h2>
+	<h2>Other topics</h2>
+	<p>This section will touch on some of the other stuff that you can
+	   do with PyMetric, beyond the mere basics.
+	</p>
+	<h3>Viewing changes</h3>
+	<p>The 'changes' command displays the effects of the current
+	   simulation. The output can be long when there are lots of
+	   effects, but by providing an optional node name, only changes
+	   for that node is shown (with more detail as well). We will
+	   continue the above example with link failure between oslo-gw
+	   and trd-gw1.
+	</p>
+	<pre style="padding-left: 2em">
+(sim) (1c/58:31:0n/0.16L) >>> changes
+Simulated changes:
+  1: Link failure between oslo-gw and trd-gw1
+
+Effects of changes:
+  * Affects 58 nodes total
+
+  * Summary:
+    bodo-gw changed path to 7 destinations
+
+    bodo-gw2 changed path to 7 destinations
+
+    harstad-gw changed path to 7 destinations
+
+    harstad-gw2 changed path to 7 destinations
+
+    harstad-gw3 changed path to 7 destinations
+
+    hovedbygget-gw1 changed path to 7 destinations
+
+    hovedbygget-gw4 changed path to 7 destinations
+
+    levanger-gw changed path to 7 destinations
+
+    mo-gw changed path to 7 destinations
+
+    mo-gw1 changed path to 7 destinations
+
+    mo-gw2 changed path to 7 destinations
+
+    namsos-gw changed path to 7 destinations
+
+    narvik-gw changed path to 7 destinations
+
+    narvik-gw2 changed path to 7 destinations
+
+    nesna-gw changed path to 7 destinations
+
+    nesna-gw2 changed path to 7 destinations
+
+    steinkjer-gw changed path to 7 destinations
+
+    steinkjer-gw2 changed path to 7 destinations
+
+    stjordal-gw changed path to 7 destinations
+
+    svalbard-gw changed path to 7 destinations
+
+    teknobyen-gw changed path to 7 destinations
+
+    teknobyen-gw2 changed path to 7 destinations
+
+    trd-gw1 changed path to 7 destinations
+
+    trd-gw4 changed path to 7 destinations
+
+    trd-gw7 changed path to 7 destinations
+
+    tromso-gw1 changed path to 7 destinations
+
+    tromso-gw2 changed path to 7 destinations
+
+    tromso-gw4 changed path to 7 destinations
+
+    tromso-gw5 changed path to 7 destinations
+
+    tromso-gw7 changed path to 7 destinations
+
+    tynset-gw changed path to 6 destinations
+
+    27 sources changed path to hovedbygget-gw1
+
+    27 sources changed path to trd-gw1
+
+    21 sources changed path to tynset-gw
+
+(sim) (1c/58:31:0n/0.16L) >>>
+    </pre>
+	<p>Now, to get more detail on the changes for tynset-gw, we could
+	   do like this:
+	</p>
+	<pre style="padding-left: 2em">
+(sim) (1c/58:31:0n/0.16L) >>> changes tynset-gw 
+Simulated changes:
+  1: Link failure between oslo-gw and trd-gw1
+
+Effects of changes:
+ * Details for tynset-gw 
+
+  - Path to stolav-gw1 now via oslo-gw3
+    instead of oslo-gw
+
+  - Path to oslo-gw4 now via oslo-gw3
+    instead of oslo-gw
+
+  - Path to oslo-gw7 now via oslo-gw3
+    instead of oslo-gw
+
+  - Path to oslo-gw3 now via elverum-gw
+    instead of oslo-gw
+
+  - Path to borre-gw now via drammen-gw
+    instead of sarpsborg-gw/drammen-gw
+
+  - Path to oslo-gw now via oslo-gw3
+    instead of trd-gw1
+
+(sim) (1c/58:31:0n/0.16L) >>>
+	</pre>
+	<p>We are now given the path changes as seen from tynset-gw.</p>
+
 	<h3>Getting information</h3>
+	<p>The commands that deal with getting information are:</p>
+	<h4>stats</h4>
+	<pre style="padding-left: 2em">
+>>> stats
+          center: hovedbygget-gw4, trd-gw1, hovedbygget-gw1, tromso-gw1,
+                  teknobyen-gw
+         density: 0.081451314328
+        diameter: 9
+           edges: 220
+   longest paths: namsos-gw <-> lillehammer-gw (114.0), lillehammer-gw <->
+                  levanger-gw (110.0), evenstad-gw <-> namsos-
+                  gw (109.0), sogndal-gw <-> tynset-gw (109.0)
+     mean length: 4.25420014609
+           nodes: 74
+       periphery: grimstad-gw2, haugesund-gw, bodo-gw, forde-gw, arendal-gw
+          radius: 5
+     reciprocity: 1.0
+  top 20 transit: trd-gw1, hovedbygget-gw1, oslo-gw, oslo-gw3, tromso-gw1,
+                  hoytek-gw, stolav-gw1, bergen-gw, alesund-
+                  gw, tromso-gw2, elverum-gw, kristiansand-gw,
+                  harstad-gw3, mo-gw1, volda-gw, hovedbygget-
+                  gw4, mo-gw2, teknobyen-gw2, sarpsborg-gw,
+                  volda-gw2
+
+>>>
+    </pre>
+	<p>The 'stats' command shows various statistics about the current
+	   topology. Some of the fields may need some explaining.
+	</p>	
+	<ul><li>'longest paths' shows the longest paths (metric-wise) in
+	        the graph</li>
+	    <li>'mean length' is the average distance in number of hops
+	        between two nodes</li>
+	    <li>'reciprocity' is the ratio of links that are
+	        bidirectional.</li>
+		<li>'top 20 transit' is the 20 nodes that have the most
+		    shortest paths passing through them.</li>
+	</ul>
+	<h4>info</h4>
+	<pre style="padding-left: 2em">
+>>> info as-gw
+Information for node as-gw:
+name           : as-gw
+degree         : 2
+eccentricity   : 7
+betweenness    : 0.000 (0.00% of max, 0.00% of avg)
+neighbors      : fredrikstad-gw, oslo-gw3
+links          : as-fredrikstad (15), as-oslo (20)
+longest paths  : as-gw <-> tynset-gw (98.0), as-gw <-> namsos-gw (89.0), as-gw
+                 <-> levanger-gw (85.0), as-gw <-> svalbard-gw
+                 (84.0), as-gw <-> sogndal-gw (76.0), as-gw <->
+                 bodo-gw (75.0), as-gw <-> forde-gw (75.0), as-
+                 gw <-> harstad-gw (75.0)
+
+>>>
+    </pre>
+	<p>The 'info' command shows various statistics for the given
+	   node. A couple of fields may need explaining.
+	</p>
+	<ul><li>'eccentricity' is the average length in hops to another
+	        node</li>
+	    <li>'betweenness' is a number indicating how central the node
+	        is as a transit node for shortest paths in the model.</li>
+	</ul>
+	<h4>linkinfo</h4>
+	<pre style="padding-left: 2em">
+>>> linkinfo oslo-gw3 bergen-gw 
+Information for link (oslo-gw3,bergen-gw):
+name           : oslo-bergen
+betweenness    : 0.007 (38.29% of max, 258.27% of avg)
+capacity       : 10Gbit/s
+load           : NA
+utilization    : NA
+
+>>>
+    </pre>
+	<p>The 'linkinfo' command is similar to the 'info' command, but
+	   naturally it gives information about a given link. If link
+	   loads are available current load and utilization is shown as
+	   well.
+	</p>
 	<h3>Showing and simulating loads</h3>	
 	<h3>Simulating anycast</h3>
 
