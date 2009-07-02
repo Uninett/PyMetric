@@ -247,6 +247,13 @@ Effects of changes:
 	<p>We are now given the path changes as seen from tynset-gw.</p>
 
 	<h3>Getting information</h3>
+	<div style="width: 30em; clear:all; float:right; position: relative; left:
+	6em;">
+	<a href="path-borre-oslo.png"><img alt="Equal cost paths from
+	borre-gw to oslo-gw" src="path-borre-oslo-350px.png"></a>
+	  <strong>Figure 3.</strong> Equal cost paths from borre-gw to oslo-gw.
+	</div>
+
 	<p>The commands that deal with getting information are:</p>
 	<h4>stats</h4>
 	<pre style="padding-left: 2em">
@@ -311,6 +318,11 @@ longest paths  : as-gw <-> tynset-gw (98.0), as-gw <-> namsos-gw (89.0), as-gw
 	    <li>'betweenness' is a number indicating how central the node
 	        is as a transit node for shortest paths in the model.</li>
 	</ul>
+	<div style="width: 30em; clear:all; float:right; position: relative; left:
+	6em;">
+	<a href="linkloads.png"><img alt="Model with current load" src="linkloads-350px.png"></a>
+	  <strong>Figure 4.</strong> Model with current load.
+	</div>
 	<h4>linkinfo</h4>
 	<pre style="padding-left: 2em">
 >>> linkinfo oslo-gw3 bergen-gw 
@@ -328,7 +340,92 @@ utilization    : NA
 	   loads are available current load and utilization is shown as
 	   well.
 	</p>
-	<h3>Showing and simulating loads</h3>	
+	<h4>listequal</h4>
+    <pre style="padding-left: 2em">
+>>> listequal
+Equal-cost paths ('path source dest' for details):
+  * arendal-gw      ->   oslo-gw4, oslo-gw7
+  * bodo-gw         ->   oslo-gw4, oslo-gw7
+  * bodo-gw2        ->   oslo-gw4, oslo-gw7
+  * borre-gw        ->   kjeller-gw, oslo-gw, oslo-gw4 (3), oslo-gw7 (3)
+  * drammen-gw      ->   fredrikstad-gw, halden-gw, oslo-gw4, oslo-gw7,
+                         sarpsborg-gw
+
+  ... etc ...
+>>>
+    </pre>
+	<p>The 'listequal' command displays all equal-cost pairs,
+	   i.e. paths that are load balanced. Such paths are shown in
+	   figure 3. If there are more than two equal-cost paths the
+	   number of paths is displayed as well.
+	</p>
+	<h3>Showing and simulating loads</h3>
+	<div style="width: 30em; clear:all; float:right; position: relative; left:
+	6em;">
+	<a href="sim-linkloads.png"><img alt="Simulated model with load" src="sim-linkloads-350px.png"></a>
+	  <strong>Figure 5.</strong> Simulated model with load.
+	</div>
+	<pre style="padding-left: 2em">
+>>> linkloads
+OK, loads refreshed, use 'plot with-load' to plot
+>>> plot with-load
+>>> 
+    </pre>
+	<p>Link loads can be fetched (if available) with the 'linkloads'
+	   command. By default this fetches the average load over the last
+	   hour. When loads are available the 'plot' and 'simplot'
+	   commands take an optional 'with-load' argument. As seen in
+	   figure 4, the color scheme and widths of the links change when
+	   viewing load. The widths now represent the capacity of the
+	   links rather than 'betweenness'. The 'linkinfo' command now
+	   displays load and utilization, while a 'utilizations' command
+	   shows the most utilized links.	
+	</p>
+	<pre style="padding-left: 2em">
+>>> linkinfo oslo-gw trd-gw1 
+Information for link (oslo-gw,trd-gw1):
+name           : oslo-trd
+betweenness    : 0.017 (98.81% of max, 666.54% of avg)
+capacity       : 10Gbit/s
+load           : 388.26 Mbit/s
+utilization    : 3.98%
+
+>>> utilizations 
+Utilizations, type 'linkinfo source dest' for more details
+
+Top 10:
+  * oslo-gw4->oslo-gw: 19.58%
+  * oslo-gw->sarpsborg-gw: 14.26%
+  * sarpsborg-gw->oslo-gw: 13.12%
+  * halden-gw->sarpsborg-gw: 12.02%
+  * sarpsborg-gw->halden-gw: 11.35%
+  * svalbard-gw->harstad-gw3: 11.00%
+  * molde-gw2->alesund-gw: 8.17%
+  * tromso-gw7->tromso-gw1: 5.60%
+  * trd-gw1->oslo-gw: 5.38%
+  * harstad-gw3->tromso-gw2: 4.56%
+
+>>> 
+    </pre>
+	<p>Now, whenever we simulate a change, the most likely load
+	distribution is calculated, and the new load can be seen by using
+	the 'simplot with-load' command. Using a link failure between
+	oslo-gw and trd-gw1 as the example as before, the effects can be
+	seen in figure 5.
+	</p>
+	<pre style="padding-left: 2em">
+(sim) >>> linkfail oslo-gw trd-gw1
+(sim) (1c/58:31:0n/0:0:0u/0.16L) >>> simplot with-load
+(sim) (1c/58:31:0n/0:0:0u/0.16L) >>> linkinfo stolav-gw1 hovedbygget-gw1 
+Information for link (stolav-gw1,hovedbygget-gw1):
+name           : oslo-trd2
+betweenness    : 0.017 (100.00% of max, 651.22% of avg)
+capacity       : 2.5Gbit/s
+load           : 388.26 Mbit/s
+utilization    : 15.98%
+
+(sim) (1c/58:31:0n/0:0:0u/0.16L) >>> 
+    </pre>
 	<h3>Simulating anycast</h3>
 
 	<hr>
