@@ -1,0 +1,12 @@
+# PyMetric configuration file ($HOME/.pymetricrc)
+
+# Loads
+use_linkloads        1
+linkloads_host       drift.uninett.no
+linkloads_url        /nett/ip-nett/load-now
+
+
+# Routing
+use_areas            1
+max_metric           63
+

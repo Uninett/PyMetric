@@ -5,6 +5,7 @@ import sys
 import os.path
 from pajek import read_pajek
 from model import Simulation, Model
+from config import Config
 from plotting import PlotUI
 from textwrap import TextWrapper
 from termcolor import colored, colored2, colored3
@@ -19,6 +20,8 @@ class MetricShell(Cmd):
          readline.read_history_file(self.histfile)
       except IOError:
          pass
+
+      self.config = Config()
 
       readline.set_completer_delims(" ")
       
@@ -35,7 +38,7 @@ class MetricShell(Cmd):
       print
       print "Initializing model...."
       if not model:
-         self.model = Model(nx.Graph())
+         self.model = Model(nx.Graph(), self.config)
          self.model.refresh_from_file(self.filename)
          if linkloads:
             self.model.refresh_linkloads()
@@ -204,6 +207,9 @@ class MetricShell(Cmd):
       return
 
    def do_linkloads(self, args):
+      if not self.config.get('use_linkloads'):
+         print "Link loads are not enabled"
+         return
       if self.model.refresh_linkloads():
          print "OK, loads refreshed, use 'plot with-load' to plot"
          if not self.simulation.linkloads:
@@ -402,14 +408,20 @@ class MetricShell(Cmd):
       self.gui.plot(G, graphdata, edge_cmap=cmap, edge_capa=capa)
 
    def do_areaplot(self, args):
-      self.gui.clear()
+      if not self.config.get('use_areas'):
+         print "IS-IS areas are not enabled"
+         return
 
-      graphdata = {}
       G = self.model.G
       areas = self.model.get_areas(G.nodes())
       if not areas:
          print "No IS-IS areas known"
-         
+         return
+
+      self.gui.clear()
+
+      graphdata = {}
+      
       graphdata['nodegroups'] = self.model.get_node_groups()      
       graphdata['areagroups'] = areas
       graphdata['edgegroups'] = self.model.get_edge_groups()
@@ -575,10 +587,12 @@ class MetricShell(Cmd):
       print "Effects of changes:"
       for arg in subargs:
          if arg not in self.simulation.get_nodes(): continue
+         nodechanges = self.simulation.get_effects_node(arg)
+         if not nodechanges.keys(): print " * No changes for %s " % (arg)
          print " * Details for %s " % (arg)
          print
 
-         nodechanges = self.simulation.get_effects_node(arg)
+
 
          self.tw.initial_indent=''
          self.tw.subsequent_indent=' '*17

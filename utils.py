@@ -74,10 +74,10 @@ def cap2str(capacity):
     if not capacity in mapping: return "Unkown"
     return mapping[capacity]
       
-def read_linkloads(G):
+def read_linkloads(G, host, url):
 
-    conn = httplib.HTTPConnection("drift.uninett.no")
-    conn.request("GET", "/nett/ip-nett/load-now")
+    conn = httplib.HTTPConnection(host)
+    conn.request("GET", url)
     r1 = conn.getresponse()
     if r1.status != 200:
         conn.close()        

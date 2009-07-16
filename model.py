@@ -4,8 +4,9 @@ import utils
 
 class Model:
 
-   def __init__(self, graph, debug=False):
+   def __init__(self, graph, config, debug=False):
       self.graph = graph
+      self.config = config
       self.debug = debug
       self.G = self._make_weighted_copy()
       self._refresh_betweenness()
@@ -16,7 +17,10 @@ class Model:
       self._refresh_all_paths()
 
    def refresh_linkloads(self):
-      self.linkloads = utils.read_linkloads(self.graph)
+      if not self.config.get('use_linkloads'): return False
+      self.linkloads = utils.read_linkloads(self.graph,
+                                            self.config.get('linkloads_host'),
+                                            self.config.get('linkloads_url'))
       if not self.linkloads: return False
       self.linkload_parts = {}
       return True
@@ -846,6 +850,7 @@ class Simulation:
       return self.effects
 
    def get_effects_node(self, node):
+      if not node in self.effects: return {}
       return self.effects[node]
 
    def get_effects_summary(self):
@@ -1488,6 +1493,8 @@ class Simulation:
       import time
       debug = False
 
+      max_metric = self.model.config.get('max_metric')
+      
       G = self.graph
       H = self.graph.copy()
       I = self.graph.copy()
@@ -1672,7 +1679,7 @@ class Simulation:
                   while (not bad_effect) and (not minmax):
                      w = w + 1
 
-                     if w > 63:
+                     if w > max_metric:
                         if debug: print "Reached maximum metric..."
                         minmax = True
                         continue
@@ -1708,7 +1715,7 @@ class Simulation:
 
                else:
                   w = w + 1
-                  if w > 63:
+                  if w > max_metric:
                      if debug: print "Reached maximum metric..."
                      continue
                   I.add_edge(u,v,w)
