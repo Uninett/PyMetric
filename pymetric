@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+# PyMetric startup script, make sure it's in your path
+# or you symlink it into your path
+#
+
+
+#######################################################
+# Change the following to suit your needs
+#
+
+# Default model location
+DEFAULTMODEL=/tmp/isis-uninett.net
+
+# If fetching from web, give URL here
+URL=http://drift.uninett.no/nett/ip-nett/isis-uninett.net
+
+# Disable this line to never fetch model from web
+wget "$URL" -O "$DEFAULTMODEL" > /dev/null 2>&1
+
+#
+# End of config, no need to change anything below
+#######################################################
+
+
+PYMETRIC_HOME=$(dirname $(readlink -f $0))
+PYTHONPATH=$PYTHONPATH:$PYMETRIC_HOME
+
+if [ ! -z "$1" ]
+then
+  python $PYMETRIC_HOME/metrics.py "$@"
+else
+  python $PYMETRIC_HOME/metrics.py "$DEFAULTMODEL"
+fi;
