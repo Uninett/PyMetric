@@ -11,7 +11,5 @@ as equal-cost paths, links with assymetric costs, longest paths
 and lots more. It can even suggest some metric changes to help
 the user with traffic engineering.
 
-It still has some assumptions that are IS-IS specific, but they
-are minor and will go away at some point. PyMetric should perform
-its job regardless of the routing protocol used (as long as it
-is a LSP)
+PyMetric should perform its job regardless of the routing protocol
+used (as long as it is a LSP).

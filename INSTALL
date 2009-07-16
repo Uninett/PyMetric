@@ -21,14 +21,16 @@ http://launchpadlibrarian.net/14321890/python-networkx_0.36-2_all.deb
 For proper alpha-blended edges the Tk version should be >= 8.5, though
 this is not *required*
 
-Just run metrics.py, giving it a topology-file (etwas.net) as input.
+Just run metrics.py, giving it a topology-file (etwas.net) as input,
+or look at the supplied 'pymetric' startup shell script. An example
+configuration file is supplied as well (pymetricrc.example).
 
-The file should look like this:
+The model file should look like this:
 
 *Network networkname
 *Vertices 2
 1 "A"   2.0  2.0   (area "optional routing area")
 2 "B"   5.0  5.0
 *Arcs
-1  2  10 (l "optional label")
+1  2  10 (l "optional label") (c optional capacity)
 2  1  10
