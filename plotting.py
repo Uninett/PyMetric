@@ -53,11 +53,11 @@ class PlotUI:
                  10000000        : 10,
                   2488000        : 6,
                   1000000        : 3,
-                   155000        : 1.5,
-                   100000        : 1,
-                    34010        : 0.5,
-                    34000        : 0.5,
-                     1984        : 0.2}   
+                   155000        : 1.75,
+                   100000        : 1.5,
+                    34010        : 1.0,
+                    34000        : 1.9,
+                     1984        : 0.75}   
 
    edgecolors = {'main'           : '#bbbbbb',
                  'mainpath'       : '#77aaff',
@@ -126,11 +126,12 @@ class PlotUI:
       f = plt.gcf()
       f.set_figwidth(8)
       f.set_figheight(13)
-      if load:
-         f.set_facecolor('#111133')
       plt.subplot(111)
-      plt.axis("off")      
-      plt.savefig(fname, dpi=72)
+      plt.axis("off")
+      if load:
+         plt.savefig(fname, facecolor='#000000', dpi=72)
+      else:
+         plt.savefig(fname, dpi=72)
 
       return
 
@@ -150,7 +151,7 @@ class PlotUI:
          nodealpha = self._get_alpha(type, opacity)
 
          if edge_cmap:
-            nodecolors = '#8888dd'
+            nodecolors = '#444488'
             nodealpha = 0.9
          
          if areagroups:
@@ -232,14 +233,14 @@ class PlotUI:
                           (0.05, 0.3, 0.3), (0.1, 0.75, 0.75),
                           (0.3, 1., 1.),
                           (0.6, 0.75, 0.75), (1., 0., 0.)),
-               'blue' :  ((0., 0.3, 0.3), (0.005, 0.5, 0.5),
-                          (0.05, 0.75, 0.75), (0.10, 1., 1.),
+               'blue' :  ((0., 0.45, 0.45), (0.005, 0.55, 0.55),
+                          (0.05, 0.8, 0.8), (0.10, 1., 1.),
                           (0.25, 0., 0.), (1., 0., 0.))
                }
             my_cmap = mc.LinearSegmentedColormap('my_colormap', ccm, 1024)
             ealpha = 0.7
             f = plt.gcf()
-            f.set_facecolor('#111133')
+            f.set_facecolor('#000000')
             edgecolors = [max(edge_cmap[(edges[i][0], edges[i][1])],
                               edge_cmap[(edges[i][1], edges[i][0])])
                           for i in range(len(edges))]
@@ -268,12 +269,14 @@ class PlotUI:
 
       if 'labels' in data:
          color = 'k'
+         fsize = 8.5
          if edge_cmap:
-            color = '#111133'
+            color = '#bbbbbb'
+            fsize = 9
          
          self.nlabelc = nx.draw_networkx_labels(graph, pos=data['pos'],
                                  labels=data['labels'],
-                                 font_size=8.5,
+                                 font_size=fsize,
                                  font_color=color,
                                  alpha=1,
                                  hold=True)
@@ -294,12 +297,12 @@ class PlotUI:
       if not edge_cmap:
          f.set_facecolor('w')
       else:
-         cb = plt.colorbar(self.edgec, shrink=0.20,
+         cb = plt.colorbar(self.edgec, shrink=0.15,
                            fraction=0.10, pad=0)
          for t in cb.ax.get_yticklabels():
-            t.set_color('#dddddd')
+            t.set_color('#bbbbbb')
          
-         cb.set_label("Link utilization", color='#dddddd')         
+         cb.set_label("Link utilization", color='#bbbbbb')         
       f.set_lod(True)
       fm = plt.get_current_fig_manager()      
 
