@@ -222,6 +222,21 @@ class PlotUI:
 
          if edge_cmap != False:
             assert edge_capa != False
+            ccm = {
+               'red'  :  ((0., 0., 0.), (0.005, 0.0, 0.0),
+                          (0.01, 0.2, 0.2), (0.1, 0., 0.),
+                          (0.6, 1, 1),
+                          (0.7, 0.75, 0.75), (0.8, 0.9, 0.9),
+                          (1., 1., 1.)),
+               'green':  ((0., 0., 0.), (0.01, 0., 0.),
+                          (0.05, 0.3, 0.3), (0.1, 0.75, 0.75),
+                          (0.3, 1., 1.),
+                          (0.6, 0.75, 0.75), (1., 0., 0.)),
+               'blue' :  ((0., 0.3, 0.3), (0.005, 0.5, 0.5),
+                          (0.05, 0.75, 0.75), (0.10, 1., 1.),
+                          (0.25, 0., 0.), (1., 0., 0.))
+               }
+            my_cmap = mc.LinearSegmentedColormap('my_colormap', ccm, 1024)
             ealpha = 0.7
             f = plt.gcf()
             f.set_facecolor('#111133')
@@ -234,9 +249,9 @@ class PlotUI:
                                 edgelist=edges,
                                 width=edgewidths,
                                 edge_color=edgecolors,
-                                edge_cmap=plt.cm.jet,
-                                edge_vmin=0.05,
-                                edge_vmax=0.95,
+                                edge_cmap=my_cmap,
+                                edge_vmin=0.005,
+                                edge_vmax=1.0,
                                 style=PlotUI.edgestyles[type],
                                 alpha=ealpha,
                                 arrows=False,
