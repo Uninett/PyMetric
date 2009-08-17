@@ -109,10 +109,14 @@ def read_linkloads(G, host, url):
 
     sanitized_loads = {}
     for (u,v) in retloads:
-        if retloads[(v,u)][1] > retloads[(u,v)][0]:
-            sanitized_loads[(u,v)] = retloads[(v,u)][1]
+        if (v,u) in retloads:
+            if retloads[(v,u)][1] > retloads[(u,v)][0]:
+                sanitized_loads[(u,v)] = retloads[(v,u)][1]
+            else:
+                sanitized_loads[(u,v)] = retloads[(u,v)][0]
         else:
             sanitized_loads[(u,v)] = retloads[(u,v)][0]
+            sanitized_loads[(v,u)] = retloads[(u,v)][1]
 
     return sanitized_loads
 
