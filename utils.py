@@ -38,9 +38,12 @@ def edge_labels(edges, edgegroups):
          for (s,t,x) in el:
             if (u,v) == (s,t):
                if not (u,v) in edgedone:
-                  m = str(int(x))
+                  metric = int(x)
+                  m = str(metric)
+                  if metric == 10:
+                      m = ""
                   if type.endswith("opath") and x != w:
-                     m += "(%s)" % str(int(w))
+                     m = "%s (%s)" % (str(int(x)), str(int(w)))
                   l = (i, m, type.startswith('main'))
                   labels.append((i, m, type.startswith('main')))
                   edgedone[(u,v)] = l
