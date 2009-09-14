@@ -104,7 +104,7 @@ def read_linkloads(G, host, url):
 
         loads_by_descr[descr] = (avg_out, avg_in)
 
-    for (u,v,edgedata) in G.edges():
+    for (u,v,edgedata) in G.edges(data=True):
         if not 'l' in edgedata: continue
         label = edgedata['l']
         if label in loads_by_descr:

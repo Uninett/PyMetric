@@ -414,7 +414,7 @@ class Model:
 
    def get_link_utilizations(self):
       utils = {}
-      for (u,v,d) in self.G.edges():
+      for (u,v,d) in self.G.edges(data=True):
          utils[(u,v)] = self.get_link_utilization(u,v)
          
       return utils
@@ -444,7 +444,7 @@ class Model:
       ebc = self.edge_betweenness
       top = self.get_edge_betweenness(top=n)
 
-      for (u, v, d) in self.G.edges():
+      for (u, v, d) in self.G.edges(data=True):
          if edges != None and (u, v) not in edges:
             continue
          if (ebc[(u,v)] > threshold and ebc[(v,u)] > threshold) \
@@ -582,7 +582,7 @@ class Model:
 
    def _make_weighted_copy(self):
       G = self.graph.copy()
-      for (u,v,d) in G.edges():
+      for (u,v,d) in G.edges(data=True):
          G.delete_edge(u,v)
          G.add_edge(u,v,d['value'])
       return G
@@ -690,7 +690,7 @@ class Simulation:
 
    def get_link_utilizations(self):
       utils = {}
-      for (u,v,d) in self.graph.edges():
+      for (u,v,d) in self.graph.edges(data=True):
          utils[(u,v)] = self.get_link_utilization(u,v)
          
       return utils
@@ -1025,10 +1025,10 @@ class Simulation:
       top = self.get_edge_betweenness(top=n)
 
 
-      redges = list(set([(u,v) for (u,v,w) in self.model.G.edges()]) \
-                  - set([(u,v) for (u,v,w) in self.graph.edges()]))
+      redges = list(set([(u,v) for (u,v,w) in self.model.G.edges(data=True)]) \
+                  - set([(u,v) for (u,v,w) in self.graph.edges(data=True)]))
 
-      for (u, v, d) in self.graph.edges():
+      for (u, v, d) in self.graph.edges(data=True):
          debug = False
          #if u == 'oslo-gw' or v == 'oslo-gw': debug = True
          if debug: print "Looking at (%s, %s, %s)" % (u, v, d)
@@ -1280,7 +1280,7 @@ class Simulation:
       ebc = self.edge_betweenness
       top = self.get_edge_betweenness(top=n)
 
-      for (u, v, d) in self.graph.edges():
+      for (u, v, d) in self.graph.edges(data=True):
          if (ebc[(u,v)] > threshold and ebc[(v,u)] > threshold) \
                 or (u,v) in top:
             if (path  != None) and (not multi) and ((u,v) in mpath_edges):
@@ -1802,7 +1802,7 @@ class Simulation:
             if debug: print "nochange was False, so going on"
 
 
-      for (u,v,w) in K.edges():
+      for (u,v,w) in K.edges(data=True):
          if (u,v) in results: continue
          old_w = G.get_edge(u,v)
          if old_w != w:
@@ -1828,7 +1828,7 @@ class Simulation:
       G = self.graph
       H = self.graph.copy()
 
-      edges = sorted(H.edges(), cmp=lambda x,y: cmp(y[2], x[2]) \
+      edges = sorted(H.edges(data=True), cmp=lambda x,y: cmp(y[2], x[2]) \
                                     or cmp(ebc[(x[0],x[1])],
                                            ebc[(y[0],y[1])]))
       

@@ -330,7 +330,7 @@ class PlotUI:
       from math import sqrt
 
       lpos = []
-      for (u,v,w) in G.edges():
+      for (u,v,w) in G.edges(data=True):
 
          (x1, y1) = pos[u]
          (x2, y2) = pos[v]
