@@ -127,7 +127,7 @@ def read_linkloads(G, host, url):
 def calc_ratio(G, loads, u, v, discard_inverse=False, no_diff=False, exclude_edges=[]):
   sum = 0
   totload = loads[(u,v)]
-  for (u1,v1,d) in G.in_edges(u):
+  for (u1,v1,d) in [(v2, u2, d2) for (u2, v2, d2) in G.edges(data=True) if u2 == u]:
       if (u1,v1) in exclude_edges:
           #totload -= loads[(u1,v1)] * calc_ratio(G, loads, u,v)
           continue
@@ -151,7 +151,7 @@ def calc_ratio(G, loads, u, v, discard_inverse=False, no_diff=False, exclude_edg
 
 def calc_contrib_ratio2(G, loads, u, v, discard_inverse=False, exclude_edges=[]):
   sum = 0
-  for (u1,v1,d) in G.in_edges(v):
+  for (u1,v1,d) in [(v2, u2, d2) for (u2, v2, d2) in G.edges(data=True) if u2 == v]:
       if (u1,v1) in exclude_edges: continue
       if discard_inverse and (u1,v1) == (u,v): continue
       sum += float(loads[(u1,v1)])
@@ -165,7 +165,8 @@ def calc_contrib_ratio2(G, loads, u, v, discard_inverse=False, exclude_edges=[])
 
 def calc_contrib_ratio(G, loads, u, v, discard_diff=False, exclude_edges=[]):
    sum = 0
-   for (u1,v1,d) in G.in_edges(v):
+
+   for (u1,v1,d) in [(v2, u2, d2) for (u2, v2, d2) in G.edges(data=True) if u2 == v]:
       if (u1,v1) in exclude_edges: continue
       sum += float(loads[(u1,v1)])
    print "Sum before diff:", sum
@@ -187,10 +188,11 @@ def node_diff_in_out(G, loads, node, inverse=False, exclude_edges=[]):
    sum_out = 0
    sum_in = 0
 
-   for (u1,v1,d) in G.out_edges(node):
+   for (u1,v1,d) in G.edges(node, data=True):
       if (u1,v1) in exclude_edges: continue
       sum_out += loads[(u1,v1)]
-   for (u1,v1,d) in G.in_edges(node):
+
+   for (u1,v1,d) in [(v2, u2, d2) for (u2, v2, d2) in G.edges(data=True) if u2 == node]:
       if (u1,v1) in exclude_edges: continue       
       sum_in += loads[(u1,v1)]
 

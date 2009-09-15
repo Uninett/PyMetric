@@ -64,7 +64,7 @@ class Model:
       sum = 0
       if not loads: loads = self.linkloads
       if not G: G = self.graph
-      for e in G.in_edges(node):
+      for e in [(v,u) for (u,v) in G.edges() if u == node]:
          sum += loads[e[1], e[0]]
       return sum
 
@@ -72,7 +72,7 @@ class Model:
       sum = 0
       if not loads: loads = self.linkloads
       if not G: G = self.graph
-      for e in G.out_edges(node):
+      for e in G.edges(node):
          sum += loads[e[0], e[1]]
       return sum
 
@@ -133,6 +133,7 @@ class Model:
       
       #print "  Finding nodes_and_paths (%s, %s) (%s secs)" % (u,v,time.time()-stime)
       nodes, pathlist = self.nodes_and_paths_using_edge(u, v, G)
+      #print "  Nodes: %s    --    Pathlist: %s" % (nodes, pathlist)
       #print "  Done. (%s secs)" % (time.time()-stime)
       partloads = {}
       counts = {}
@@ -287,7 +288,7 @@ class Model:
       retinfo['degree'] = G.out_degree(node)
       retinfo['links'] = map(lambda x: x[2]['l'] + \
                                 " (" + str(int(x[2]['value'])) + ")",
-                             G.out_edges(node))
+                             G.edges(node))
       retinfo['neighbors'] = G.neighbors(node)
       retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])      
       retinfo['eccentricity'] = nx.eccentricity(G, node)
@@ -713,7 +714,7 @@ class Simulation:
       retinfo['degree'] = G.out_degree(node)
       retinfo['links'] = map(lambda x: self.model.graph.get_edge(x[0], x[1])['l']\
                                 + " (" + str(int(x[2])) + ")",
-                             G.out_edges(node))
+                             G.edges(node))
       retinfo['neighbors'] = G.neighbors(node)
       retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])
       retinfo['eccentricity'] = nx.eccentricity(G, node)
