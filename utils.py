@@ -150,41 +150,6 @@ def calc_ratio(G, loads, u, v, discard_inverse=False, no_diff=False, exclude_edg
       ratio = 1
   return ratio
 
-def calc_contrib_ratio2(G, loads, u, v, discard_inverse=False, exclude_edges=[]):
-  sum = 0
-  for (u1,v1,d) in [(v2, u2, d2) for (u2, v2, d2) in G.edges(data=True) if u2 == v]:
-      if (u1,v1) in exclude_edges: continue
-      if discard_inverse and (u1,v1) == (u,v): continue
-      sum += float(loads[(u1,v1)])
-  if sum == 0:
-     return 0
-  ratio = loads[(u,v)] / float(sum)
-  #if ratio < 0 or ratio > 1:
-  #    print "Assertion failed for ratio (%s, %s): %s" \
-  #        % (u, v, ratio)
-  return ratio
-
-def calc_contrib_ratio(G, loads, u, v, discard_diff=False, exclude_edges=[]):
-   sum = 0
-
-   for (u1,v1,d) in [(v2, u2, d2) for (u2, v2, d2) in G.edges(data=True) if u2 == v]:
-      if (u1,v1) in exclude_edges: continue
-      sum += float(loads[(u1,v1)])
-   print "Sum before diff:", sum
-   ee = []
-   #if discard_inverse: ee += [(u,v)]
-   ndiff = node_diff_in_out(G, loads, v, False, ee)
-   if not discard_diff:
-       if ndiff > 0:
-           sum += ndiff
-   print "Sum after diff:", sum
-   if sum == 0:
-      return 0
-
-   print "Initial load:", loads[(u,v)]
-   ratio = loads[(u,v)] / float(sum)
-   return ratio
-
 def node_diff_in_out(G, loads, node, inverse=False, exclude_edges=[]):
    sum_out = 0
    sum_in = 0
