@@ -331,7 +331,7 @@ class MetricShell(Cmd):
          if self.simulation.linkloads:
             cmap = {}
             capa = {}
-            for (u,v,d) in self.simulation.graph.edges(data=True):
+            for (u,v) in self.simulation.graph.edges():
                cmap[(u,v)] = self.simulation.get_link_utilization(u,v)
                capa[(u,v)] = self.model.get_link_capacity(u,v)            
          else:
@@ -387,7 +387,7 @@ class MetricShell(Cmd):
          if self.model.linkloads:
             cmap = {}
             capa = {}
-            for (u,v,d) in self.model.graph.edges(data=True):
+            for (u,v) in self.model.graph.edges():
                cmap[(u,v)] = self.model.get_link_utilization(u,v)
                capa[(u,v)] = self.model.get_link_capacity(u,v)            
          else:

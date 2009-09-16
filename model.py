@@ -57,23 +57,23 @@ class Model:
 
    def uneven_metrics(self):
       G = self.G
-      return filter(lambda x: G.get_edge(x[0], x[1]) != G.get_edge(x[1], x[0]),
+      return filter(lambda x: G[x[0]][x[1]] != G[x[1]][x[0]],
                     G.edges())
 
    def get_total_in_load(self, node, G=None, loads=None):
       sum = 0
       if not loads: loads = self.linkloads
       if not G: G = self.graph
-      for e in [(v,u) for (u,v) in G.edges() if u == node]:
-         sum += loads[e[1], e[0]]
+      for neighbor in G[node]:
+         sum += loads[neighbor, node]
       return sum
 
    def get_total_out_load(self, node, G=None, loads=None):
       sum = 0
       if not loads: loads = self.linkloads
       if not G: G = self.graph
-      for e in G.edges(node):
-         sum += loads[e[0], e[1]]
+      for neighbor in G[node]:
+         sum += loads[node, neighbor]
       return sum
 
    def nodes_and_paths_using_edge(self, u, v, G=None):
@@ -415,14 +415,14 @@ class Model:
 
    def get_link_utilizations(self):
       utils = {}
-      for (u,v,d) in self.G.edges(data=True):
+      for (u,v) in self.G.edges():
          utils[(u,v)] = self.get_link_utilization(u,v)
          
       return utils
 
    def has_capacity_info(self):
       for (u,v) in self.graph.edges():
-         if 'c' in self.graph.get_edge(u,v):
+         if 'c' in self.graph[u][v]:
             return True
       return False
    
@@ -691,7 +691,7 @@ class Simulation:
 
    def get_link_utilizations(self):
       utils = {}
-      for (u,v,d) in self.graph.edges(data=True):
+      for (u,v) in self.graph.edges():
          utils[(u,v)] = self.get_link_utilization(u,v)
          
       return utils
@@ -838,7 +838,7 @@ class Simulation:
 
    def uneven_metrics(self):
       G = self.graph
-      return filter(lambda x: G.get_edge(x[0], x[1]) != G.get_edge(x[1], x[0]),
+      return filter(lambda x: G[x[0]][x[1]] != G[x[1]][x[0]],
                     G.edges())
    
    def has_changes(self):
@@ -1026,8 +1026,8 @@ class Simulation:
       top = self.get_edge_betweenness(top=n)
 
 
-      redges = list(set([(u,v) for (u,v,w) in self.model.G.edges(data=True)]) \
-                  - set([(u,v) for (u,v,w) in self.graph.edges(data=True)]))
+      redges = list(set(self.model.G.edges()) \
+                  - set(self.graph.edges()))
 
       for (u, v, d) in self.graph.edges(data=True):
          debug = False
