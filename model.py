@@ -208,7 +208,6 @@ class Model:
 
       #print "get_path_loads: (%s -> %s) [%s]" % (u,v,path)
       cr = utils.calc_ratio
-      ccr = utils.calc_contrib_ratio
       ndio = utils.node_diff_in_out
 
       loadmatrix = {}
