@@ -324,6 +324,7 @@ class MetricShell(Cmd):
          print "No simulation is active, type 'simulation start' to start one"
          return
 
+      suppress_default_metric = True
       subargs = args.split()
       cmap=False
       capa=False
@@ -340,6 +341,9 @@ class MetricShell(Cmd):
          self.do_anycast("")
          return
       
+      if 'all-metrics' in subargs:
+         suppress_default_metric = False
+
       self.gui.clear()
       graphdata = {}
       graphdata['nodegroups'] = self.simulation.get_node_groups()
@@ -349,7 +353,8 @@ class MetricShell(Cmd):
       
       graphdata['labels'] = utils.short_names(G.nodes())
       graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
-                                                  graphdata['edgegroups'])
+                                                  graphdata['edgegroups'],
+                                                  suppress_default_metric)
       graphdata['pos'] = self.model.get_positions(G.nodes())
 
       graphdata['title'] = "Simulated topology"
@@ -381,6 +386,7 @@ class MetricShell(Cmd):
          self.do_simplot(args)
          return
 
+      suppress_default_metric = True
       cmap = False
       capa = False
       if 'with-load' in subargs:
@@ -393,6 +399,9 @@ class MetricShell(Cmd):
          else:
             print "Warning: No linkloads are defined. Use 'linkloads' to update."
       
+      if 'all-metrics' in subargs:
+         suppress_default_metric = False
+
       graphdata = {}
       
       G = self.model.G
@@ -400,7 +409,8 @@ class MetricShell(Cmd):
       graphdata['edgegroups'] = self.model.get_edge_groups()
       graphdata['labels'] = utils.short_names(G.nodes())
       graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
-                                                  graphdata['edgegroups'])
+                                                  graphdata['edgegroups'],
+                                                  suppress_default_metric)
       graphdata['pos'] = self.model.get_positions(G.nodes())
       graphdata['title'] = "Current topology"
       if cmap:
@@ -1229,7 +1239,7 @@ Available commands:
       return []
 
    def complete_plot(self, text, line, begidx, endidx):
-      return filter(lambda x: x.startswith(text), ['with-load'])
+      return filter(lambda x: x.startswith(text), ['with-load', 'all-metrics'])
 
    def complete_simplot(self, text, line, begidx, endidx):
       return self.complete_plot(text, line, begidx, endidx)
@@ -1372,12 +1382,15 @@ Available commands:
       
    def help_plot(self):
       print """
-            Usage: plot (with-load)
+            Usage: plot (with-load) (all-metrics)
 
             Display metrics and topology graphically.
 
             If given the 'with-load' option, instead
             display current link utilizations.
+
+            If given the 'all-metrics' option, default metrics
+            will also be drawn.
             """
 
    def help_asymmetric(self):
@@ -1464,6 +1477,9 @@ Available commands:
 
             If given the 'with-load' option, instead
             display current simulated link utilizations.
+
+            If given the 'all-metrics' option, default metrics
+            will also be drawn.
             """
 
    def help_stats(self):

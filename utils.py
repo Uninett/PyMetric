@@ -26,7 +26,7 @@ def short_names(names):
          labels[n] = mainlabel
    return labels
 
-def edge_labels(edges, edgegroups):
+def edge_labels(edges, edgegroups=[], suppress_default=True):
    labels = []
 
    i = 0
@@ -40,7 +40,7 @@ def edge_labels(edges, edgegroups):
                if not (u,v) in edgedone:
                   metric = int(x)
                   m = str(metric)
-                  if metric == 10:
+                  if metric == 10 and suppress_default:
                       m = ""
                   if type.endswith("opath") and x != w:
                      m = "%s (%s)" % (str(int(x)), str(int(w)))
