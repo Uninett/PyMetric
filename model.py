@@ -287,7 +287,7 @@ class Model:
       retinfo['degree'] = G.out_degree(node)
       retinfo['links'] = map(lambda x: x[2]['l'] + \
                                 " (" + str(int(x[2]['value'])) + ")",
-                             G.edges(node))
+                             G.edges(node, data=True))
       retinfo['neighbors'] = G.neighbors(node)
       retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])      
       retinfo['eccentricity'] = nx.eccentricity(G, node)
@@ -713,7 +713,7 @@ class Simulation:
       retinfo['degree'] = G.out_degree(node)
       retinfo['links'] = map(lambda x: self.model.graph.get_edge(x[0], x[1])['l']\
                                 + " (" + str(int(x[2])) + ")",
-                             G.edges(node))
+                             G.edges(node, data=True))
       retinfo['neighbors'] = G.neighbors(node)
       retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])
       retinfo['eccentricity'] = nx.eccentricity(G, node)
