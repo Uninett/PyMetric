@@ -770,7 +770,7 @@ class Simulation:
       return retinfo
 
    def get_transit_links(self, u, v):
-      paths = self.model.nodes_and_paths_using_edge(u,v,self.G, True)[1]
+      paths = self.model.nodes_and_paths_using_edge(u,v,self.graph, True)[1]
       return paths.keys()
 
    def get_max_cost_paths(self, top=8, nodes=None):
