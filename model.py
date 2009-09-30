@@ -76,13 +76,17 @@ class Model:
          sum += loads[node, neighbor]
       return sum
 
-   def nodes_and_paths_using_edge(self, u, v, G=None):
+   def get_transit_links(self, u, v):
+      paths = self.nodes_and_paths_using_edge(u,v,self.G, True)[1]
+      return paths.keys()
+
+   def nodes_and_paths_using_edge(self, u, v, G=None, transit_only=False):
       import time
       stime = time.time()
       if not G:
          G = self.G
 
-      if (G == self.G or G == self.graph) and (u,v) in self.paths_using_edge:
+      if not transit_only and (G == self.G or G == self.graph) and (u,v) in self.paths_using_edge:
          return self.paths_using_edge[(u,v)]
       
       candidates = set()
@@ -106,11 +110,20 @@ class Model:
                edges = zip(path, path[1:])
                if (u,v) in edges:
                   if (node,dest) not in retpaths:
-                     retpaths[(node,dest)] = [path]
+                     if transit_only:
+                        if node not in (u,v) and dest not in (u,v):
+                           retpaths[(node,dest)] = [path]
+                     else:
+                        retpaths[(node,dest)] = [path]
                   else:
-                     retpaths[(node,dest)].append(path)
+                     if transit_only:
+                        if node not in (u,v) and dest not in (u,v):
+                           retpaths[(node,dest)].append(path)
+                     else:
+                        retpaths[(node,dest)].append(path)
       #print "      Returning (%s secs)" % (time.time() - stime)
-      self.paths_using_edge[(u,v)] = (candidates, retpaths)
+      if not transit_only:
+         self.paths_using_edge[(u,v)] = (candidates, retpaths)
       return candidates, retpaths
 
    def get_link_load_part(self, u, v, loads=None, G=None):
@@ -596,7 +609,7 @@ class Model:
          self.all_paths[node] = nx.dijkstra_predecessor_and_distance(self.G, node)
       for edge in self.G.edges():
          self.paths_using_edge[edge[0], edge[1]] = \
-                          self.nodes_and_paths_using_edge(edge[0], edge[1])
+                          self.nodes_and_paths_using_edge(edge[0], edge[1], self.G)
 
    def _routeselection(self, paths):
       p_attr = {}
@@ -756,6 +769,10 @@ class Simulation:
       retinfo['utilization'] = utilization
 
       return retinfo
+
+   def get_transit_links(self, u, v):
+      paths = self.model.nodes_and_paths_using_edge(u,v,self.G, True)[1]
+      return paths.keys()
 
    def get_max_cost_paths(self, top=8, nodes=None):
       sources = self.graph.nodes()
