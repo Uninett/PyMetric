@@ -464,8 +464,10 @@ class MetricShell(Cmd):
       model = self.model
       if self.simulation.is_active():
          model = self.simulation
+
+      transit_info = False
       subargs = args.split()
-      if not len(subargs) == 2:
+      if not len(subargs) >= 2:
          print "Must specify two nodes"
          return
          self.help_linkinfo()
@@ -474,6 +476,10 @@ class MetricShell(Cmd):
       if not model.graph.has_edge(u,v):
          print "Model has no link (%s,%s)" % (u,v)
          return
+
+      if len(subargs) == 3:
+         if subargs[2] == 'with-transit':
+            transit_info = True
 
       self.tw.initial_indent = ''
       self.tw.subsequent_indent = ' '*17
@@ -490,6 +496,25 @@ class MetricShell(Cmd):
          info = str(info)
          print "%-15s: %s" % (key, self.tw.fill(info))
       print
+
+      if transit_info:
+          transitinfo = model.get_transit_links(u,v)
+          if not transitinfo:
+             print "No paths are using this link as a transit link."
+             self.tw.width = 80
+             return
+          transit_by_start_node = {}
+          print "Paths using (%s, %s) as transit link:" % (u,v)
+          for (start_node, end_node) in transitinfo:
+             if not start_node in transit_by_start_node:
+                transit_by_start_node[start_node] = [end_node]
+             else:
+                transit_by_start_node[start_node].append(end_node)
+
+          self.tw.subsequent_indent = ' '*24
+          self.tw.width= 80
+          for start_node in sorted(transit_by_start_node):
+             print "  * %-16s -> %s" % (start_node, self.tw.fill(", ".join(sorted(transit_by_start_node[start_node]))))
 
       self.tw.width = 80
       
@@ -1248,7 +1273,13 @@ Available commands:
       return self.complete_path(text, line, begidx, endidx)
 
    def complete_linkinfo(self, text, line, begidx, endidx):
-      return self.complete_path(text, line, begidx, endidx)   
+      length = len(line.split())
+      if length == 3 and not text:
+         return ['with-transit']
+      elif length == 4:
+         return filter(lambda x: x.startswith(text), ['with-transit'])
+      else:
+         return self.complete_path(text, line, begidx, endidx)   
    
    def complete_reroute(self, text, line, begidx, endidx):
       length = len(line.split())
@@ -1434,12 +1465,15 @@ Available commands:
 
    def help_linkinfo(self):
       print """
-            Usage: linkinfo <source> <destination>
+            Usage: linkinfo <source> <destination> (with-transit)
 
             Show various information about the link
             between the source and destination nodes.
             If available, also shows the capacity and
             current utilization i Mbit/s.
+
+            If given the with-transit option show (start,end) pairs
+            using this link as a transit link.
             """
 
    def help_listequal(self):
