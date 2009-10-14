@@ -57,23 +57,23 @@ class Model:
 
    def uneven_metrics(self):
       G = self.G
-      return filter(lambda x: G.get_edge(x[0], x[1]) != G.get_edge(x[1], x[0]),
+      return filter(lambda x: G[x[0]][x[1]] != G[x[1]][x[0]],
                     G.edges())
 
    def get_total_in_load(self, node, G=None, loads=None):
       sum = 0
       if not loads: loads = self.linkloads
       if not G: G = self.graph
-      for e in G.in_edges(node):
-         sum += loads[e[1], e[0]]
+      for neighbor in G[node]:
+         sum += loads[neighbor, node]
       return sum
 
    def get_total_out_load(self, node, G=None, loads=None):
       sum = 0
       if not loads: loads = self.linkloads
       if not G: G = self.graph
-      for e in G.out_edges(node):
-         sum += loads[e[0], e[1]]
+      for neighbor in G[node]:
+         sum += loads[node, neighbor]
       return sum
 
    def get_transit_links(self, u, v):
@@ -146,6 +146,7 @@ class Model:
       
       #print "  Finding nodes_and_paths (%s, %s) (%s secs)" % (u,v,time.time()-stime)
       nodes, pathlist = self.nodes_and_paths_using_edge(u, v, G)
+      #print "  Nodes: %s    --    Pathlist: %s" % (nodes, pathlist)
       #print "  Done. (%s secs)" % (time.time()-stime)
       partloads = {}
       counts = {}
@@ -266,7 +267,7 @@ class Model:
       if not G.has_edge(u,v): return {}
       bc = self.edge_betweenness
       retinfo = {}
-      edgedata = self.graph.get_edge(u,v)
+      edgedata = self.graph[u][v]
       name = ""
       capacity = 0
       if 'c' in edgedata:
@@ -299,7 +300,7 @@ class Model:
       retinfo['degree'] = G.out_degree(node)
       retinfo['links'] = map(lambda x: x[2]['l'] + \
                                 " (" + str(int(x[2]['value'])) + ")",
-                             G.out_edges(node))
+                             G.edges(node, data=True))
       retinfo['neighbors'] = G.neighbors(node)
       retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])      
       retinfo['eccentricity'] = nx.eccentricity(G, node)
@@ -410,7 +411,7 @@ class Model:
       if not self.graph.has_edge(u,v):
          return False
 
-      linkinfo = self.graph.get_edge(u,v)
+      linkinfo = self.graph[u][v]
 
       if not 'c' in linkinfo:
          if as_string:
@@ -426,14 +427,14 @@ class Model:
 
    def get_link_utilizations(self):
       utils = {}
-      for (u,v,d) in self.G.edges():
+      for (u,v) in self.G.edges():
          utils[(u,v)] = self.get_link_utilization(u,v)
          
       return utils
 
    def has_capacity_info(self):
       for (u,v) in self.graph.edges():
-         if 'c' in self.graph.get_edge(u,v):
+         if 'c' in self.graph[u][v]:
             return True
       return False
    
@@ -456,7 +457,7 @@ class Model:
       ebc = self.edge_betweenness
       top = self.get_edge_betweenness(top=n)
 
-      for (u, v, d) in self.G.edges():
+      for (u, v, d) in self.G.edges(data=True):
          if edges != None and (u, v) not in edges:
             continue
          if (ebc[(u,v)] > threshold and ebc[(v,u)] > threshold) \
@@ -550,7 +551,7 @@ class Model:
       stats["periphery"] = nx.periphery(self.graph)
       stats["density"] = nx.density(self.graph)
       stats["reciprocity"] = utils.reciprocity(self.graph)
-      stats["mean length"] = utils.mean_shortest_path_length(self.graph)
+      stats["mean length"] = nx.average_shortest_path_length(self.graph)
       stats["longest paths"] = self.get_max_cost_paths()      
       stats["top 20 transit"] = top
 
@@ -594,9 +595,9 @@ class Model:
 
    def _make_weighted_copy(self):
       G = self.graph.copy()
-      for (u,v,d) in G.edges():
-         G.delete_edge(u,v)
-         G.add_edge(u,v,d['value'])
+      for (u,v,d) in G.edges(data=True):
+         G.remove_edge(u,v)
+         G.add_edge(u,v,weight=d['value'])
       return G
 
    def _refresh_betweenness(self):
@@ -691,7 +692,7 @@ class Simulation:
       stats["periphery"] = nx.periphery(self.graph)
       stats["density"] = nx.density(self.graph)
       stats["reciprocity"] = utils.reciprocity(self.graph)
-      stats["mean length"] = utils.mean_shortest_path_length(self.graph)
+      stats["mean length"] = nx.average_shortest_path_length(self.graph)
       stats["longest paths"] = self.get_max_cost_paths()
       stats["top 20 transit"] = top[0:20]
 
@@ -702,7 +703,7 @@ class Simulation:
 
    def get_link_utilizations(self):
       utils = {}
-      for (u,v,d) in self.graph.edges():
+      for (u,v) in self.graph.edges():
          utils[(u,v)] = self.get_link_utilization(u,v)
          
       return utils
@@ -723,9 +724,9 @@ class Simulation:
       retinfo = {}
       retinfo['name'] = node
       retinfo['degree'] = G.out_degree(node)
-      retinfo['links'] = map(lambda x: self.model.graph.get_edge(x[0], x[1])['l']\
+      retinfo['links'] = map(lambda x: self.model.graph.get_edge_data(x[0], x[1])['l']\
                                 + " (" + str(int(x[2])) + ")",
-                             G.out_edges(node))
+                             G.edges(node, data=True))
       retinfo['neighbors'] = G.neighbors(node)
       retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])
       retinfo['eccentricity'] = nx.eccentricity(G, node)
@@ -745,7 +746,7 @@ class Simulation:
       if not G.has_edge(u,v): return {}
       bc = self.edge_betweenness
       retinfo = {}
-      edgedata = self.model.graph.get_edge(u,v)
+      edgedata = self.model.graph[u][v]
       name = ""
       capacity = 0
       if 'c' in edgedata:
@@ -853,7 +854,7 @@ class Simulation:
 
    def uneven_metrics(self):
       G = self.graph
-      return filter(lambda x: G.get_edge(x[0], x[1]) != G.get_edge(x[1], x[0]),
+      return filter(lambda x: G[x[0]][x[1]] != G[x[1]][x[0]],
                     G.edges())
    
    def has_changes(self):
@@ -1041,10 +1042,10 @@ class Simulation:
       top = self.get_edge_betweenness(top=n)
 
 
-      redges = list(set([(u,v) for (u,v,w) in self.model.G.edges()]) \
-                  - set([(u,v) for (u,v,w) in self.graph.edges()]))
+      redges = list(set(self.model.G.edges()) \
+                  - set(self.graph.edges()))
 
-      for (u, v, d) in self.graph.edges():
+      for (u, v, d) in self.graph.edges(data=True):
          debug = False
          #if u == 'oslo-gw' or v == 'oslo-gw': debug = True
          if debug: print "Looking at (%s, %s, %s)" % (u, v, d)
@@ -1296,7 +1297,7 @@ class Simulation:
       ebc = self.edge_betweenness
       top = self.get_edge_betweenness(top=n)
 
-      for (u, v, d) in self.graph.edges():
+      for (u, v, d) in self.graph.edges(data=True):
          if (ebc[(u,v)] > threshold and ebc[(v,u)] > threshold) \
                 or (u,v) in top:
             if (path  != None) and (not multi) and ((u,v) in mpath_edges):
@@ -1362,14 +1363,14 @@ class Simulation:
       if not self.graph.has_edge(n1,n2):
          return False
 
-      metrics = (self.graph.get_edge(n1, n2), self.graph.get_edge(n2,n1))
+      metrics = (self.graph[n1][n2]['weight'], self.graph[n2][n1]['weight'])
 
       if record:
          self.changes.append({'type': Simulation.SC_LINKFAIL, 'pair': (n1,n2),
                                       'metrics': metrics})
       
-      self.graph.delete_edge(n1, n2)
-      self.graph.delete_edge(n2, n1)
+      self.graph.remove_edge(n1, n2)
+      self.graph.remove_edge(n2, n1)
       
       self._refresh_betweenness()
       self._refresh_anycast()
@@ -1384,12 +1385,12 @@ class Simulation:
 
       removed_edges = []
       for node in self.graph.neighbors(n1):
-         removed_edges.append((n1, node, self.graph.get_edge(n1, node)))
-         self.graph.delete_edge(n1, node)
-         removed_edges.append((node, n1, self.graph.get_edge(node, n1)))
-         self.graph.delete_edge(node, n1)
+         removed_edges.append((n1, node, self.graph[n1][node]))
+         self.graph.remove_edge(n1, node)
+         removed_edges.append((node, n1, self.graph[node][n1]))
+         self.graph.remove_edge(node, n1)
          
-      self.graph.delete_node(n1)
+      self.graph.remove_node(n1)
 
       if record:
          self.changes.append({'type': Simulation.SC_ROUTERFAIL, 'node': n1,
@@ -1409,9 +1410,9 @@ class Simulation:
       if not self.graph.has_edge(n1, n2):
          return False
 
-      old_metric = self.graph.get_edge(n1, n2)
+      old_metric = self.graph[n1][n2]['weight']
 
-      if old_metric == self.graph.get_edge(n2,n1):
+      if old_metric == self.graph[n2][n1]['weight']:
          bidirectional = True
 
       if bidir == False:
@@ -1419,12 +1420,12 @@ class Simulation:
          
       if not record:
          bidirectional = False
-      self.graph.delete_edge(n1, n2)
-      self.graph.add_edge(n1,n2, metric)
+      self.graph.remove_edge(n1, n2)
+      self.graph.add_edge(n1,n2, weight=metric)
 
       if bidirectional or bidir:
-         self.graph.delete_edge(n2, n1)
-         self.graph.add_edge(n2,n1, metric)         
+         self.graph.remove_edge(n2, n1)
+         self.graph.add_edge(n2,n1, weight=metric)
 
       if record:
          self.changes.append({'type': Simulation.SC_METRIC, 'pair': (n1, n2),
@@ -1483,8 +1484,8 @@ class Simulation:
          (u, v)   = change['pair']
          (m1, m2) = change['metrics']
 
-         self.graph.add_edge(u, v, m1)
-         self.graph.add_edge(v, u, m2)
+         self.graph.add_edge(u, v, weight=m1)
+         self.graph.add_edge(v, u, weight=m2)
 
       elif change['type'] == Simulation.SC_ROUTERFAIL:
          router = change['node']
@@ -1492,7 +1493,7 @@ class Simulation:
 
          self.graph.add_node(router)
          for (u, v, w) in edges:
-            self.graph.add_edge(u, v, w)
+            self.graph.add_edge(u, v, weight=w)
 
       del self.changes[idx]
 
@@ -1539,7 +1540,7 @@ class Simulation:
                return (success, results)
             if node == via:
                continue
-            H.delete_node(node)
+            H.remove_node(node)
 
       J = H.copy()
       cost2, paths2 = self.path(via, stop, H)
@@ -1592,7 +1593,7 @@ class Simulation:
          if debug: print "Negative adjustment loop"
          for path1 in paths1:
             for (u,v) in zip(path1, path1[1:]):
-               w = I.get_edge(u,v)
+               w = I[u][v]['weight']
                if debug: print "Considering (%s,%s,%s) (-1)" % (u,v,w)
 
                if u == start or u == stop or v == start or v == stop:
@@ -1608,8 +1609,8 @@ class Simulation:
                         minmax = True
                         break
 
-                     I.add_edge(u,v,w)
-                     K.add_edge(u,v,w)               
+                     I.add_edge(u,v,weight=w)
+                     K.add_edge(u,v,weight=w)
 
                      effects = self._refresh_effects(G, I)
 
@@ -1644,8 +1645,8 @@ class Simulation:
                      if debug: print "Reached minimum metric..."
                      continue
 
-                  I.add_edge(u,v,w)
-                  K.add_edge(u,v,w)               
+                  I.add_edge(u,v,weight=w)
+                  K.add_edge(u,v,weight=w)
 
                   effects = self._refresh_effects(G, I)
 
@@ -1659,8 +1660,8 @@ class Simulation:
                               bad_effect = True
                               
                if bad_effect == True:
-                  I.add_edge(u,v,w+1)
-                  K.add_edge(u,v,w+1)                  
+                  I.add_edge(u,v,weight=w+1)
+                  K.add_edge(u,v,weight=w+1)
                   continue
                elif bad_effect == 2:
                   continue
@@ -1683,7 +1684,7 @@ class Simulation:
          for opath in opaths:
             for (u,v) in zip(opath, opath[1:]):
                if u in V and v in V: continue
-               w = I.get_edge(u,v)
+               w = I[u][v]['weight']
 
                if debug: print "Considering (%s,%s,%s) (+1)" % (u,v,w)
 
@@ -1700,8 +1701,8 @@ class Simulation:
                         minmax = True
                         continue
 
-                     I.add_edge(u,v,w)
-                     K.add_edge(u,v,w)               
+                     I.add_edge(u,v,weight=w)
+                     K.add_edge(u,v,weight=w)
 
                      effects = self._refresh_effects(G, I)
 
@@ -1734,8 +1735,8 @@ class Simulation:
                   if w > max_metric:
                      if debug: print "Reached maximum metric..."
                      continue
-                  I.add_edge(u,v,w)
-                  K.add_edge(u,v,w)
+                  I.add_edge(u,v,weight=w)
+                  K.add_edge(u,v,weight=w)
 
                   effects = self._refresh_effects(G, I)
 
@@ -1749,8 +1750,8 @@ class Simulation:
                               bad_effect = True
 
                if bad_effect == True:
-                  I.add_edge(u,v,w-1)
-                  K.add_edge(u,v,w-1)
+                  I.add_edge(u,v,weight=w-1)
+                  K.add_edge(u,v,weight=w-1)
                   continue
                elif bad_effect == 2:
                   continue
@@ -1772,15 +1773,15 @@ class Simulation:
          if debug: print "2nd negative adjustment loop"
          for path2 in paths2:
             for (u,v) in zip(path2, path2[1:]):
-               w = J.get_edge(u,v)
+               w = J[u][v]['weight']
                if debug: print "Considering (%s,%s,%s) (-1)" % (u,v,w)
                w = w - 1
 
                if w < 1:
                   if debug: print "Reached minimum metric..."
                   continue                  
-               J.add_edge(u,v,w)
-               K.add_edge(u,v,w)               
+               J.add_edge(u,v,weight=w)
+               K.add_edge(u,v,weight=w)
 
                effects = self._refresh_effects(H, J)
 
@@ -1794,8 +1795,8 @@ class Simulation:
                            bad_effect = True
 
                if bad_effect:
-                  J.add_edge(u,v,w+1)
-                  K.add_edge(u,v,w+1)                  
+                  J.add_edge(u,v,weight=w+1)
+                  K.add_edge(u,v,weight=w+1)
                   continue
                else:
                   if debug: print "C: nochange = False"
@@ -1818,9 +1819,9 @@ class Simulation:
             if debug: print "nochange was False, so going on"
 
 
-      for (u,v,w) in K.edges():
+      for (u,v,w) in K.edges(data=True):
          if (u,v) in results: continue
-         old_w = G.get_edge(u,v)
+         old_w = G[u][v]['weight']
          if old_w != w:
             results[(u,v)] = w
             results[(v,u)] = w
@@ -1844,7 +1845,7 @@ class Simulation:
       G = self.graph
       H = self.graph.copy()
 
-      edges = sorted(H.edges(), cmp=lambda x,y: cmp(y[2], x[2]) \
+      edges = sorted(H.edges(data=True), cmp=lambda x,y: cmp(y[2], x[2]) \
                                     or cmp(ebc[(x[0],x[1])],
                                            ebc[(y[0],y[1])]))
       
@@ -1855,10 +1856,10 @@ class Simulation:
          adjustment_found = False
 
          for (u,v,w) in edges:
-            if not w == H.get_edge(v,u):
+            if not w == H[v][u]['weight']:
                continue
 
-            old_w = G.get_edge(u,v)
+            old_w = G[u][v]['weight']
             if debug: print "Considering (%s,%s)" % (u,v)
 
             count = 1
@@ -1868,16 +1869,16 @@ class Simulation:
                if w < 1: continue
 
                if debug: print "Trying metrics..",
-               H.add_edge(u,v,w)
-               H.add_edge(v,u,w)
+               H.add_edge(u,v,weight=w)
+               H.add_edge(v,u,weight=w)
                effects = self._refresh_effects(G, H)
                if effects:
                   if abs(old_w - w) < 2:
-                     H.add_edge(u,v,old_w)
-                     H.add_edge(v,u,old_w)
+                     H.add_edge(u,v,weight=old_w)
+                     H.add_edge(v,u,weight=old_w)
                   else:
-                     H.add_edge(u,v,w+1)
-                     H.add_edge(v,u,w+1)
+                     H.add_edge(u,v,weight=w+1)
+                     H.add_edge(v,u,weight=w+1)
                   if debug: print "failed! (%s->%s)" % (old_w, w+1)
                else:
                   count = 1

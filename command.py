@@ -78,8 +78,8 @@ class MetricShell(Cmd):
                                 effects.keys())
             multimulti = filter(lambda x: len(effects[x].keys()) >= 20,
                                 effects.keys())                               
-            difflen = utils.mean_shortest_path_length(self.simulation.graph)\
-                    - utils.mean_shortest_path_length(self.model.G)
+            difflen = nx.average_shortest_path_length(self.simulation.graph)\
+                    - nx.average_shortest_path_length(self.model.G)
 
             components = nx.connected_component_subgraphs(
                            self.simulation.graph.to_undirected())
@@ -293,7 +293,8 @@ class MetricShell(Cmd):
             % (len(uneven)/2)
       print
       for (u,v,w) in uneven:
-         x = G.get_edge(v,u)
+         w = w['weight']
+         x = G[v][u]['weight']
          if (v,u) in printed: continue
          print "%-15s -> %s: %s" % (u,v,w)
          print "%-15s -> %s: %s" % (v,u,x)
@@ -332,7 +333,7 @@ class MetricShell(Cmd):
          if self.simulation.linkloads:
             cmap = {}
             capa = {}
-            for (u,v,d) in self.simulation.graph.edges():
+            for (u,v) in self.simulation.graph.edges():
                cmap[(u,v)] = self.simulation.get_link_utilization(u,v)
                capa[(u,v)] = self.model.get_link_capacity(u,v)            
          else:
@@ -352,7 +353,7 @@ class MetricShell(Cmd):
       G = self.simulation.graph
       
       graphdata['labels'] = utils.short_names(G.nodes())
-      graphdata['edgelabels'] = utils.edge_labels(G.edges(),
+      graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
                                                   graphdata['edgegroups'],
                                                   suppress_default_metric)
       graphdata['pos'] = self.model.get_positions(G.nodes())
@@ -393,7 +394,7 @@ class MetricShell(Cmd):
          if self.model.linkloads:
             cmap = {}
             capa = {}
-            for (u,v,d) in self.model.graph.edges():
+            for (u,v) in self.model.graph.edges():
                cmap[(u,v)] = self.model.get_link_utilization(u,v)
                capa[(u,v)] = self.model.get_link_capacity(u,v)            
          else:
@@ -408,7 +409,7 @@ class MetricShell(Cmd):
       graphdata['nodegroups'] = self.model.get_node_groups()
       graphdata['edgegroups'] = self.model.get_edge_groups()
       graphdata['labels'] = utils.short_names(G.nodes())
-      graphdata['edgelabels'] = utils.edge_labels(G.edges(),
+      graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
                                                   graphdata['edgegroups'],
                                                   suppress_default_metric)
       graphdata['pos'] = self.model.get_positions(G.nodes())
@@ -436,7 +437,7 @@ class MetricShell(Cmd):
       graphdata['areagroups'] = areas
       graphdata['edgegroups'] = self.model.get_edge_groups()
       graphdata['labels'] = utils.short_names(G.nodes())
-      graphdata['edgelabels'] = utils.edge_labels(G.edges(),
+      graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
                                                   graphdata['edgegroups'])
       graphdata['pos'] = self.model.get_positions(G.nodes())
       graphdata['title'] = "Current topology with IS-IS areas"
@@ -705,7 +706,7 @@ class MetricShell(Cmd):
             graphdata['acgroups'] = acgroups
             graphdata['edgegroups'] = self.simulation.get_edge_groups()
             graphdata['labels'] = utils.short_names(G.nodes())
-            graphdata['edgelabels'] = utils.edge_labels(G.edges(),
+            graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
                                                         graphdata['edgegroups'])
             graphdata['pos'] = self.model.get_positions(G.nodes())
             graphdata['title'] = "Simulated topology with anycast groups"
@@ -773,9 +774,9 @@ class MetricShell(Cmd):
       G = self.simulation.graph
       shown = {}
       for e in sorted(ret[1]):
-         u,v,w = e[0], e[1], ret[1][e]
+         u,v,w = e[0], e[1], ret[1][e]['weight']
          if (u,v) in shown: continue
-         w_old = G.get_edge(u,v)
+         w_old = G[u][v]['weight']
          if w_old != w:
             linkstr = "%s <-> %s" % (u,v)
             oldstr = "%s" % int(w_old)
@@ -793,7 +794,7 @@ class MetricShell(Cmd):
          for e in ret[1]:
             u,v,w = e[0], e[1], ret[1][e]            
             if (u,v) in applied: continue
-            w_old = G.get_edge(u,v)
+            w_old = G[u][v]['weight']
             if w_old != w:
                self.simulation.change_metric(u,v,w, True)
                applied[(u,v)] = True
@@ -817,9 +818,9 @@ class MetricShell(Cmd):
       
       shown = {}
       header = False
-      for (u,v,w) in sorted(H.edges()):
+      for (u,v,w) in sorted(H.edges(data=True)):
          if (u,v) in shown: continue
-         w_old = G.get_edge(u,v)
+         w_old = G[u][v]['weight']
          if w_old != w:
             if not header:
                print "The following metric changes are suggested:"
@@ -837,9 +838,9 @@ class MetricShell(Cmd):
 
       applied = {}
       if apply.lower() == 'y':
-         for (u,v,w) in H.edges():
+         for (u,v,w) in H.edges(data=True):
             if (u,v) in applied: continue
-            w_old = G.get_edge(u,v)
+            w_old = G[u][v]['weight']
             if w_old != w:
                self.simulation.change_metric(u,v,w, True)
                applied[(u,v)] = True
@@ -967,7 +968,7 @@ class MetricShell(Cmd):
       graphdata['nodegroups'] = self.simulation.get_node_groups(path=path)
       graphdata['edgegroups'] = self.simulation.get_edge_groups(path=paths)
       graphdata['labels'] = utils.short_names(G.nodes())
-      graphdata['edgelabels'] = utils.edge_labels(G.edges(),
+      graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
                                                   graphdata['edgegroups'])
       graphdata['pos'] = self.model.get_positions(G.nodes())
       graphdata['title'] = "Simulated path from %s to %s (cost: %d, %s hops)" \
@@ -1055,7 +1056,7 @@ class MetricShell(Cmd):
       geg   = self.simulation.get_diff_edge_groups(paths,spaths)
 
       lb   = utils.short_names(H.nodes())
-      elb  = utils.edge_labels(H.edges(), geg)
+      elb  = utils.edge_labels(H.edges(data=True), geg)
       pos = self.model.get_positions(H.nodes())
       graphdata['title'] = "Simulated path from %s to %s (cost: %d, %s hops)" \
                            % (a, b, slength, shops)
@@ -1157,7 +1158,7 @@ class MetricShell(Cmd):
       graphdata['nodegroups'] = self.model.get_node_groups(path=path)
       graphdata['edgegroups'] = self.model.get_edge_groups(path=paths)
       graphdata['labels'] = utils.short_names(G.nodes())
-      graphdata['edgelabels'] = utils.edge_labels(G.edges(),
+      graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
                                                   graphdata['edgegroups'])
       graphdata['pos'] = self.model.get_positions(G.nodes())
       graphdata['title'] = "Path(s) from %s to %s (cost: %d, %s hops)" \

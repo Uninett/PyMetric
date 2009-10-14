@@ -31,7 +31,7 @@ def parse_pajek(lines):
     import shlex
     if is_string_like(lines): lines=iter(lines.split('\n'))
     lines = iter([line.rstrip('\n') for line in lines])
-    G=networkx.XDiGraph(selfloops=True) # are multiedges allowed in Pajek?
+    G=networkx.DiGraph() # are multiedges allowed in Pajek?
     G.node_attr={} # dictionary to hold node attributes
     directed=True # assume this is a directed network for now
     while lines:
@@ -71,9 +71,7 @@ def parse_pajek(lines):
                 G.node_attr[label].update(extra_attr)
                 l = lines.next()
                 l = l.lower()
-        if l.startswith("*edges") or l.startswith("*arcs"):
-            if l.startswith("*edge"):
-                G=networkx.XGraph(G) # switch from digraph to graph
+        if l.startswith("*arcs"):
             for l in lines:
                 if not l: break
                 if l.startswith('#'): continue
@@ -85,7 +83,7 @@ def parse_pajek(lines):
                 extra_attr=zip(splitline[3::2],splitline[4::2])
                 edge_data.update(extra_attr)
                 if G.has_edge(u,v):
-                    if G.get_edge(u,v)['value'] > float(w):
+                    if G[u][v]['value'] > float(w):
                         G.add_edge(u,v,edge_data)
                 else:
                     G.add_edge(u,v,edge_data)

@@ -1,13 +1,6 @@
 import networkx as nx
 import httplib
 
-def mean_shortest_path_length(G):
-    """Calculate mean shortest path lenght of graph."""
-    apspl = nx.path.all_pairs_shortest_path_length(G)
-    sum_of_paths = sum([sum(apspl[n].values()) for n in apspl])
-    num_of_paths = sum(map(len, apspl.values()))
-    return float(sum_of_paths) / num_of_paths
-
 def reciprocity(G):
     """Calculate reciprocity of graph, i.e. the ratio of the edges in
     one direction that have and edge going in the other direction."""
@@ -38,7 +31,7 @@ def edge_labels(edges, edgegroups=[], suppress_default=True):
          for (s,t,x) in el:
             if (u,v) == (s,t):
                if not (u,v) in edgedone:
-                  metric = int(x)
+                  metric = int(x['weight'])
                   m = str(metric)
                   if metric == 10 and suppress_default:
                       m = ""
@@ -104,7 +97,7 @@ def read_linkloads(G, host, url):
 
         loads_by_descr[descr] = (avg_out, avg_in)
 
-    for (u,v,edgedata) in G.edges():
+    for (u,v,edgedata) in G.edges(data=True):
         if not 'l' in edgedata: continue
         label = edgedata['l']
         if label in loads_by_descr:
@@ -127,12 +120,13 @@ def read_linkloads(G, host, url):
 def calc_ratio(G, loads, u, v, discard_inverse=False, no_diff=False, exclude_edges=[]):
   sum = 0
   totload = loads[(u,v)]
-  for (u1,v1,d) in G.in_edges(u):
-      if (u1,v1) in exclude_edges:
+  #for (u1,v1,d) in [(v2, u2, d2) for (u2, v2, d2) in G.edges(data=True) if u2 == u]:
+  for neighbor in G[u]:
+      if (neighbor,u) in exclude_edges:
           #totload -= loads[(u1,v1)] * calc_ratio(G, loads, u,v)
           continue
-      if discard_inverse and (u1,v1) == (v,u): continue
-      sum += float(loads[(u1,v1)])
+      if discard_inverse and (neighbor,u) == (v,u): continue
+      sum += float(loads[(neighbor,u)])
   ee = []
   #if discard_inverse: ee += [(v,u)]
   ndiff = node_diff_in_out(G, loads, u, False, ee)
@@ -149,17 +143,15 @@ def calc_ratio(G, loads, u, v, discard_inverse=False, no_diff=False, exclude_edg
       ratio = 1
   return ratio
 
-
 def node_diff_in_out(G, loads, node, inverse=False, exclude_edges=[]):
    sum_out = 0
    sum_in = 0
 
-   for (u1,v1,d) in G.out_edges(node):
-      if (u1,v1) in exclude_edges: continue
-      sum_out += loads[(u1,v1)]
-   for (u1,v1,d) in G.in_edges(node):
-      if (u1,v1) in exclude_edges: continue       
-      sum_in += loads[(u1,v1)]
+   for neighbor in G[node]:
+      if (node,neighbor) not in exclude_edges:
+         sum_out += loads[(node,neighbor)]
+      if (neighbor,node) not in exclude_edges:
+         sum_in += loads[(neighbor,node)]
 
    if inverse:
       return sum_in - sum_out

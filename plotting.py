@@ -330,7 +330,7 @@ class PlotUI:
       from math import sqrt
 
       lpos = []
-      for (u,v,w) in G.edges():
+      for (u,v,w) in G.edges(data=True):
 
          (x1, y1) = pos[u]
          (x2, y2) = pos[v]
@@ -343,7 +343,7 @@ class PlotUI:
          x = (x1+x2) / 2
          y = (y1+y2) / 2
 
-         if d < 70 and G.get_edge(v,u) == w:
+         if d < 70 and G[v][u]['weight'] == w['weight']:
             pass
 
          else:
