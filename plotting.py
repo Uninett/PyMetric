@@ -343,7 +343,7 @@ class PlotUI:
          x = (x1+x2) / 2
          y = (y1+y2) / 2
 
-         if d < 70 and G.get_edge(v,u) == w:
+         if d < 70 and G[v][u]['weight'] == w['weight']:
             pass
 
          else:

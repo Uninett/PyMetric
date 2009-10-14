@@ -78,8 +78,8 @@ class MetricShell(Cmd):
                                 effects.keys())
             multimulti = filter(lambda x: len(effects[x].keys()) >= 20,
                                 effects.keys())                               
-            difflen = utils.mean_shortest_path_length(self.simulation.graph)\
-                    - utils.mean_shortest_path_length(self.model.G)
+            difflen = nx.average_shortest_path_length(self.simulation.graph)\
+                    - nx.average_shortest_path_length(self.model.G)
 
             components = nx.connected_component_subgraphs(
                            self.simulation.graph.to_undirected())
@@ -293,7 +293,8 @@ class MetricShell(Cmd):
             % (len(uneven)/2)
       print
       for (u,v,w) in uneven:
-         x = G.get_edge(v,u)
+         w = w['weight']
+         x = G[v][u]['weight']
          if (v,u) in printed: continue
          print "%-15s -> %s: %s" % (u,v,w)
          print "%-15s -> %s: %s" % (v,u,x)
@@ -773,9 +774,9 @@ class MetricShell(Cmd):
       G = self.simulation.graph
       shown = {}
       for e in sorted(ret[1]):
-         u,v,w = e[0], e[1], ret[1][e]
+         u,v,w = e[0], e[1], ret[1][e]['weight']
          if (u,v) in shown: continue
-         w_old = G.get_edge(u,v)
+         w_old = G[u][v]['weight']
          if w_old != w:
             linkstr = "%s <-> %s" % (u,v)
             oldstr = "%s" % int(w_old)
@@ -793,7 +794,7 @@ class MetricShell(Cmd):
          for e in ret[1]:
             u,v,w = e[0], e[1], ret[1][e]            
             if (u,v) in applied: continue
-            w_old = G.get_edge(u,v)
+            w_old = G[u][v]['weight']
             if w_old != w:
                self.simulation.change_metric(u,v,w, True)
                applied[(u,v)] = True
@@ -819,7 +820,7 @@ class MetricShell(Cmd):
       header = False
       for (u,v,w) in sorted(H.edges(data=True)):
          if (u,v) in shown: continue
-         w_old = G.get_edge(u,v)
+         w_old = G[u][v]['weight']
          if w_old != w:
             if not header:
                print "The following metric changes are suggested:"
@@ -839,7 +840,7 @@ class MetricShell(Cmd):
       if apply.lower() == 'y':
          for (u,v,w) in H.edges(data=True):
             if (u,v) in applied: continue
-            w_old = G.get_edge(u,v)
+            w_old = G[u][v]['weight']
             if w_old != w:
                self.simulation.change_metric(u,v,w, True)
                applied[(u,v)] = True

@@ -1,13 +1,6 @@
 import networkx as nx
 import httplib
 
-def mean_shortest_path_length(G):
-    """Calculate mean shortest path lenght of graph."""
-    apspl = nx.path.all_pairs_shortest_path_length(G)
-    sum_of_paths = sum([sum(apspl[n].values()) for n in apspl])
-    num_of_paths = sum(map(len, apspl.values()))
-    return float(sum_of_paths) / num_of_paths
-
 def reciprocity(G):
     """Calculate reciprocity of graph, i.e. the ratio of the edges in
     one direction that have and edge going in the other direction."""
@@ -38,7 +31,7 @@ def edge_labels(edges, edgegroups=[], suppress_default=True):
          for (s,t,x) in el:
             if (u,v) == (s,t):
                if not (u,v) in edgedone:
-                  metric = int(x)
+                  metric = int(x['weight'])
                   m = str(metric)
                   if metric == 10 and suppress_default:
                       m = ""
