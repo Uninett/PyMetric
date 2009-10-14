@@ -7,8 +7,6 @@
   have options for 'hr', 'day', 'week', 'avg', 'peak' etc.
 * Should cache linkload to file?
 * Display linkload-effects in 'changes'?.
-* Speedups in load calculations now depend on get_path_loads-
-  function (called *a lot*)
 * Make it possible to simulate linkloads.
 * Separate colorschemes 'dark' and 'light' for with-load.
 * Should paths have with-load option?

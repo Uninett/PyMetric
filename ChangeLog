@@ -1,0 +1,48 @@
+PyMetric 0.8 (20091014)
+
+  * Add GPLv2 licence
+  * Custom colormap for edges when showing load
+  * Suppress edge label when metric equals default metric,
+    and add 'all-metrics' option to override when plotting.
+  * Fix bug when we only have linkload data in one direction
+    for a link.
+  * Add a with-transit option to the 'linkinfo' command, showing
+    which (start,end) node-pairs use the link as a transit link.
+  * Port code to the new 1.00 NetworkX API.
+
+PyMetric 0.7 (20090716)
+  
+  * Show link utilizations in prompt
+  * Fix bug with changing allready changed metrics
+  * Fix bug with resetting anycast nodes when
+    simulation ends
+  * Add configuration file option and sample
+  * Add sample startup script
+
+PyMetric 0.5.1 (20090602)
+
+  * Bugfix for load distribution
+
+PyMetric 0.5 (20090529)
+
+  * Add linkload/capacity stuff.
+  * Add linkinfo command.
+  * Add timeout to rerouting (2 minutes)
+  * Add options to change command
+  * More documentation
+  * Various bugfixes
+
+PyMetric 0.4.1 (20090515)
+
+  * Bugfix for broken simpath/diffpath
+
+PyMetric 0.4 (20090515)
+
+  * More sensible reroute command
+  * Add anycast simulation
+  * Various cleanups and bugfixes
+
+PyMetric <= 0.3 (20090513)
+
+  * No detailed changelog kept
+

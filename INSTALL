@@ -1,31 +1,41 @@
-Just install the python-networkx package, and make sure the Python TK
-bindings, NumPy and Matplotlib are all installed. The readline python
-module is also needed.
+PyMetric has the following dependencies:
 
-Matplotlib must support the TkAgg backend, that is be built against
-Tk/Tkinter.
-
+* NetworkX (http://networkx.lanl.gov/)
+* Matplotlib (http://matplotlib.sourceforge.net/) with TkAgg backend support.
+* Python TK-bindings
+* Python Readline support
 
 On Debian/Ubuntu, just do
 
-  sudo apt-get install python-networkx python-tk python-matplotlib python-numpy
+  sudo apt-get install python-networkx python-tk python-matplotlib
 
-And you should be good to go.
+On NetBSD use the following packages:
 
-Note: As it *requires* python-networkx version 0.36, you cant use the
-standard Hardy (8.04) packages..
+  math/py-networkx
+  x11/py-Tk
+  math/py-matplotlib
+  math/py-matplotlib-tk
+  devel/py-readline
 
-The intrepid package (8.10) should work, you can find it here:
-http://launchpadlibrarian.net/14321890/python-networkx_0.36-2_all.deb
+Note: Starting with the 0.8 release PyMetric *requires* NetworkX
+version >=1.00rc1, if your distro doesn't have a new enough package,
+either build one yourself, or use easy_install:
+
+ $ easy_install install networkx
 
 For proper alpha-blended edges the Tk version should be >= 8.5, though
 this is not *required*
 
-Just run metrics.py, giving it a topology-file (etwas.net) as input,
-or look at the supplied 'pymetric' startup shell script. An example
-configuration file is supplied as well (pymetricrc.example).
+To install, extract the source to a suitable directory, there is no
+real install script at the moment. Just run metrics.py, giving it a
+topology-file (etwas.net) as input, or look at the supplied 'pymetric'
+startup shell script. This could be adapted and linked to
+/usr/bin/pymetric, should you wish to do a multi-user install.
 
-The model file should look like this:
+An example configuration file is supplied as well
+(pymetricrc.example). The per-user configuration file is .pymetricrc.
+
+The .net-model file should look like this:
 
 *Network networkname
 *Vertices 2
