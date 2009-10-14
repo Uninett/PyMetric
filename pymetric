@@ -23,7 +23,13 @@ wget "$URL" -O "$DEFAULTMODEL" > /dev/null 2>&1
 #######################################################
 
 
-PYMETRIC_HOME=$(dirname $(readlink -f $0))
+PYMETRIC_HOME=$(dirname $(readlink -f $0 2>/dev/null) 2>/dev/null)
+
+if [ -z "$PYMETRIC_HOME" ]
+then
+  PYMETRIC_HOME="."
+fi;
+
 PYTHONPATH=$PYTHONPATH:$PYMETRIC_HOME
 
 if [ ! -z "$1" ]
