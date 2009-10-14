@@ -57,32 +57,36 @@ class Model:
 
    def uneven_metrics(self):
       G = self.G
-      return filter(lambda x: G.get_edge(x[0], x[1]) != G.get_edge(x[1], x[0]),
+      return filter(lambda x: G[x[0]][x[1]] != G[x[1]][x[0]],
                     G.edges())
 
    def get_total_in_load(self, node, G=None, loads=None):
       sum = 0
       if not loads: loads = self.linkloads
       if not G: G = self.graph
-      for e in G.in_edges(node):
-         sum += loads[e[1], e[0]]
+      for neighbor in G[node]:
+         sum += loads[neighbor, node]
       return sum
 
    def get_total_out_load(self, node, G=None, loads=None):
       sum = 0
       if not loads: loads = self.linkloads
       if not G: G = self.graph
-      for e in G.out_edges(node):
-         sum += loads[e[0], e[1]]
+      for neighbor in G[node]:
+         sum += loads[node, neighbor]
       return sum
 
-   def nodes_and_paths_using_edge(self, u, v, G=None):
+   def get_transit_links(self, u, v):
+      paths = self.nodes_and_paths_using_edge(u,v,self.G, True)[1]
+      return paths.keys()
+
+   def nodes_and_paths_using_edge(self, u, v, G=None, transit_only=False):
       import time
       stime = time.time()
       if not G:
          G = self.G
 
-      if (G == self.G or G == self.graph) and (u,v) in self.paths_using_edge:
+      if not transit_only and (G == self.G or G == self.graph) and (u,v) in self.paths_using_edge:
          return self.paths_using_edge[(u,v)]
       
       candidates = set()
@@ -106,11 +110,20 @@ class Model:
                edges = zip(path, path[1:])
                if (u,v) in edges:
                   if (node,dest) not in retpaths:
-                     retpaths[(node,dest)] = [path]
+                     if transit_only:
+                        if node not in (u,v) and dest not in (u,v):
+                           retpaths[(node,dest)] = [path]
+                     else:
+                        retpaths[(node,dest)] = [path]
                   else:
-                     retpaths[(node,dest)].append(path)
+                     if transit_only:
+                        if node not in (u,v) and dest not in (u,v):
+                           retpaths[(node,dest)].append(path)
+                     else:
+                        retpaths[(node,dest)].append(path)
       #print "      Returning (%s secs)" % (time.time() - stime)
-      self.paths_using_edge[(u,v)] = (candidates, retpaths)
+      if not transit_only:
+         self.paths_using_edge[(u,v)] = (candidates, retpaths)
       return candidates, retpaths
 
    def get_link_load_part(self, u, v, loads=None, G=None):
@@ -133,6 +146,7 @@ class Model:
       
       #print "  Finding nodes_and_paths (%s, %s) (%s secs)" % (u,v,time.time()-stime)
       nodes, pathlist = self.nodes_and_paths_using_edge(u, v, G)
+      #print "  Nodes: %s    --    Pathlist: %s" % (nodes, pathlist)
       #print "  Done. (%s secs)" % (time.time()-stime)
       partloads = {}
       counts = {}
@@ -286,7 +300,7 @@ class Model:
       retinfo['degree'] = G.out_degree(node)
       retinfo['links'] = map(lambda x: x[2]['l'] + \
                                 " (" + str(int(x[2]['value'])) + ")",
-                             G.out_edges(node))
+                             G.edges(node, data=True))
       retinfo['neighbors'] = G.neighbors(node)
       retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])      
       retinfo['eccentricity'] = nx.eccentricity(G, node)
@@ -413,14 +427,14 @@ class Model:
 
    def get_link_utilizations(self):
       utils = {}
-      for (u,v,d) in self.G.edges():
+      for (u,v) in self.G.edges():
          utils[(u,v)] = self.get_link_utilization(u,v)
          
       return utils
 
    def has_capacity_info(self):
       for (u,v) in self.graph.edges():
-         if 'c' in self.graph.get_edge(u,v):
+         if 'c' in self.graph[u][v]:
             return True
       return False
    
@@ -443,7 +457,7 @@ class Model:
       ebc = self.edge_betweenness
       top = self.get_edge_betweenness(top=n)
 
-      for (u, v, d) in self.G.edges():
+      for (u, v, d) in self.G.edges(data=True):
          if edges != None and (u, v) not in edges:
             continue
          if (ebc[(u,v)] > threshold and ebc[(v,u)] > threshold) \
@@ -581,7 +595,7 @@ class Model:
 
    def _make_weighted_copy(self):
       G = self.graph.copy()
-      for (u,v,d) in G.edges():
+      for (u,v,d) in G.edges(data=True):
          G.delete_edge(u,v)
          G.add_edge(u,v,d['value'])
       return G
@@ -595,7 +609,7 @@ class Model:
          self.all_paths[node] = nx.dijkstra_predecessor_and_distance(self.G, node)
       for edge in self.G.edges():
          self.paths_using_edge[edge[0], edge[1]] = \
-                          self.nodes_and_paths_using_edge(edge[0], edge[1])
+                          self.nodes_and_paths_using_edge(edge[0], edge[1], self.G)
 
    def _routeselection(self, paths):
       p_attr = {}
@@ -689,7 +703,7 @@ class Simulation:
 
    def get_link_utilizations(self):
       utils = {}
-      for (u,v,d) in self.graph.edges():
+      for (u,v) in self.graph.edges():
          utils[(u,v)] = self.get_link_utilization(u,v)
          
       return utils
@@ -712,7 +726,7 @@ class Simulation:
       retinfo['degree'] = G.out_degree(node)
       retinfo['links'] = map(lambda x: self.model.graph.get_edge(x[0], x[1])['l']\
                                 + " (" + str(int(x[2])) + ")",
-                             G.out_edges(node))
+                             G.edges(node, data=True))
       retinfo['neighbors'] = G.neighbors(node)
       retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])
       retinfo['eccentricity'] = nx.eccentricity(G, node)
@@ -755,6 +769,10 @@ class Simulation:
       retinfo['utilization'] = utilization
 
       return retinfo
+
+   def get_transit_links(self, u, v):
+      paths = self.model.nodes_and_paths_using_edge(u,v,self.graph, True)[1]
+      return paths.keys()
 
    def get_max_cost_paths(self, top=8, nodes=None):
       sources = self.graph.nodes()
@@ -836,7 +854,7 @@ class Simulation:
 
    def uneven_metrics(self):
       G = self.graph
-      return filter(lambda x: G.get_edge(x[0], x[1]) != G.get_edge(x[1], x[0]),
+      return filter(lambda x: G[x[0]][x[1]] != G[x[1]][x[0]],
                     G.edges())
    
    def has_changes(self):
@@ -1024,10 +1042,10 @@ class Simulation:
       top = self.get_edge_betweenness(top=n)
 
 
-      redges = list(set([(u,v) for (u,v,w) in self.model.G.edges()]) \
-                  - set([(u,v) for (u,v,w) in self.graph.edges()]))
+      redges = list(set(self.model.G.edges()) \
+                  - set(self.graph.edges()))
 
-      for (u, v, d) in self.graph.edges():
+      for (u, v, d) in self.graph.edges(data=True):
          debug = False
          #if u == 'oslo-gw' or v == 'oslo-gw': debug = True
          if debug: print "Looking at (%s, %s, %s)" % (u, v, d)
@@ -1279,7 +1297,7 @@ class Simulation:
       ebc = self.edge_betweenness
       top = self.get_edge_betweenness(top=n)
 
-      for (u, v, d) in self.graph.edges():
+      for (u, v, d) in self.graph.edges(data=True):
          if (ebc[(u,v)] > threshold and ebc[(v,u)] > threshold) \
                 or (u,v) in top:
             if (path  != None) and (not multi) and ((u,v) in mpath_edges):
@@ -1801,7 +1819,7 @@ class Simulation:
             if debug: print "nochange was False, so going on"
 
 
-      for (u,v,w) in K.edges():
+      for (u,v,w) in K.edges(data=True):
          if (u,v) in results: continue
          old_w = G.get_edge(u,v)
          if old_w != w:
@@ -1827,7 +1845,7 @@ class Simulation:
       G = self.graph
       H = self.graph.copy()
 
-      edges = sorted(H.edges(), cmp=lambda x,y: cmp(y[2], x[2]) \
+      edges = sorted(H.edges(data=True), cmp=lambda x,y: cmp(y[2], x[2]) \
                                     or cmp(ebc[(x[0],x[1])],
                                            ebc[(y[0],y[1])]))
       

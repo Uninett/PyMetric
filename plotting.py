@@ -10,18 +10,18 @@ import readline, sys
 
 class PlotUI:
 
-   nodesizes  = {'main'        : 800,
-                 'mainpath'    : 900,
-                 'mainstart'   : 900,
-                 'mainstop'    : 900,
-                 'mainopath'   : 800,
-                 'mainupath'   : 900,
-                 'normal'      : 500,
-                 'normalstart' : 600,
-                 'normalstop'  : 600,
-                 'normalpath'  : 600,
-                 'normalopath' : 500,
-                 'normalupath' : 600}
+   nodesizes  = {'main'        : 700,
+                 'mainpath'    : 800,
+                 'mainstart'   : 800,
+                 'mainstop'    : 800,
+                 'mainopath'   : 700,
+                 'mainupath'   : 800,
+                 'normal'      : 350,
+                 'normalstart' : 425,
+                 'normalstop'  : 425,
+                 'normalpath'  : 425,
+                 'normalopath' : 350,
+                 'normalupath' : 425}
 
    nodecolors  = {'main'       : '#cccccc',
                  'mainpath'    : '#77aaff',
@@ -269,10 +269,10 @@ class PlotUI:
 
       if 'labels' in data:
          color = 'k'
-         fsize = 8.5
+         fsize = 7.5
          if edge_cmap:
             color = '#bbbbbb'
-            fsize = 9
+            fsize = 8.5
          
          self.nlabelc = nx.draw_networkx_labels(graph, pos=data['pos'],
                                  labels=data['labels'],
@@ -330,7 +330,7 @@ class PlotUI:
       from math import sqrt
 
       lpos = []
-      for (u,v,w) in G.edges():
+      for (u,v,w) in G.edges(data=True):
 
          (x1, y1) = pos[u]
          (x2, y2) = pos[v]

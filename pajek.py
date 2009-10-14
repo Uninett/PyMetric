@@ -31,7 +31,7 @@ def parse_pajek(lines):
     import shlex
     if is_string_like(lines): lines=iter(lines.split('\n'))
     lines = iter([line.rstrip('\n') for line in lines])
-    G=networkx.XDiGraph(selfloops=True) # are multiedges allowed in Pajek?
+    G=networkx.DiGraph() # are multiedges allowed in Pajek?
     G.node_attr={} # dictionary to hold node attributes
     directed=True # assume this is a directed network for now
     while lines:

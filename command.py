@@ -324,6 +324,7 @@ class MetricShell(Cmd):
          print "No simulation is active, type 'simulation start' to start one"
          return
 
+      suppress_default_metric = True
       subargs = args.split()
       cmap=False
       capa=False
@@ -331,7 +332,7 @@ class MetricShell(Cmd):
          if self.simulation.linkloads:
             cmap = {}
             capa = {}
-            for (u,v,d) in self.simulation.graph.edges():
+            for (u,v) in self.simulation.graph.edges():
                cmap[(u,v)] = self.simulation.get_link_utilization(u,v)
                capa[(u,v)] = self.model.get_link_capacity(u,v)            
          else:
@@ -340,6 +341,9 @@ class MetricShell(Cmd):
          self.do_anycast("")
          return
       
+      if 'all-metrics' in subargs:
+         suppress_default_metric = False
+
       self.gui.clear()
       graphdata = {}
       graphdata['nodegroups'] = self.simulation.get_node_groups()
@@ -348,8 +352,9 @@ class MetricShell(Cmd):
       G = self.simulation.graph
       
       graphdata['labels'] = utils.short_names(G.nodes())
-      graphdata['edgelabels'] = utils.edge_labels(G.edges(),
-                                                  graphdata['edgegroups'])
+      graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
+                                                  graphdata['edgegroups'],
+                                                  suppress_default_metric)
       graphdata['pos'] = self.model.get_positions(G.nodes())
 
       graphdata['title'] = "Simulated topology"
@@ -381,26 +386,31 @@ class MetricShell(Cmd):
          self.do_simplot(args)
          return
 
+      suppress_default_metric = True
       cmap = False
       capa = False
       if 'with-load' in subargs:
          if self.model.linkloads:
             cmap = {}
             capa = {}
-            for (u,v,d) in self.model.graph.edges():
+            for (u,v) in self.model.graph.edges():
                cmap[(u,v)] = self.model.get_link_utilization(u,v)
                capa[(u,v)] = self.model.get_link_capacity(u,v)            
          else:
             print "Warning: No linkloads are defined. Use 'linkloads' to update."
       
+      if 'all-metrics' in subargs:
+         suppress_default_metric = False
+
       graphdata = {}
       
       G = self.model.G
       graphdata['nodegroups'] = self.model.get_node_groups()
       graphdata['edgegroups'] = self.model.get_edge_groups()
       graphdata['labels'] = utils.short_names(G.nodes())
-      graphdata['edgelabels'] = utils.edge_labels(G.edges(),
-                                                  graphdata['edgegroups'])
+      graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
+                                                  graphdata['edgegroups'],
+                                                  suppress_default_metric)
       graphdata['pos'] = self.model.get_positions(G.nodes())
       graphdata['title'] = "Current topology"
       if cmap:
@@ -426,7 +436,7 @@ class MetricShell(Cmd):
       graphdata['areagroups'] = areas
       graphdata['edgegroups'] = self.model.get_edge_groups()
       graphdata['labels'] = utils.short_names(G.nodes())
-      graphdata['edgelabels'] = utils.edge_labels(G.edges(),
+      graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
                                                   graphdata['edgegroups'])
       graphdata['pos'] = self.model.get_positions(G.nodes())
       graphdata['title'] = "Current topology with IS-IS areas"
@@ -454,8 +464,10 @@ class MetricShell(Cmd):
       model = self.model
       if self.simulation.is_active():
          model = self.simulation
+
+      transit_info = False
       subargs = args.split()
-      if not len(subargs) == 2:
+      if not len(subargs) >= 2:
          print "Must specify two nodes"
          return
          self.help_linkinfo()
@@ -464,6 +476,10 @@ class MetricShell(Cmd):
       if not model.graph.has_edge(u,v):
          print "Model has no link (%s,%s)" % (u,v)
          return
+
+      if len(subargs) == 3:
+         if subargs[2] == 'with-transit':
+            transit_info = True
 
       self.tw.initial_indent = ''
       self.tw.subsequent_indent = ' '*17
@@ -480,6 +496,25 @@ class MetricShell(Cmd):
          info = str(info)
          print "%-15s: %s" % (key, self.tw.fill(info))
       print
+
+      if transit_info:
+          transitinfo = model.get_transit_links(u,v)
+          if not transitinfo:
+             print "No paths are using this link as a transit link."
+             self.tw.width = 80
+             return
+          transit_by_start_node = {}
+          print "Paths using (%s, %s) as transit link:" % (u,v)
+          for (start_node, end_node) in transitinfo:
+             if not start_node in transit_by_start_node:
+                transit_by_start_node[start_node] = [end_node]
+             else:
+                transit_by_start_node[start_node].append(end_node)
+
+          self.tw.subsequent_indent = ' '*24
+          self.tw.width= 80
+          for start_node in sorted(transit_by_start_node):
+             print "  * %-16s -> %s" % (start_node, self.tw.fill(", ".join(sorted(transit_by_start_node[start_node]))))
 
       self.tw.width = 80
       
@@ -670,7 +705,7 @@ class MetricShell(Cmd):
             graphdata['acgroups'] = acgroups
             graphdata['edgegroups'] = self.simulation.get_edge_groups()
             graphdata['labels'] = utils.short_names(G.nodes())
-            graphdata['edgelabels'] = utils.edge_labels(G.edges(),
+            graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
                                                         graphdata['edgegroups'])
             graphdata['pos'] = self.model.get_positions(G.nodes())
             graphdata['title'] = "Simulated topology with anycast groups"
@@ -782,7 +817,7 @@ class MetricShell(Cmd):
       
       shown = {}
       header = False
-      for (u,v,w) in sorted(H.edges()):
+      for (u,v,w) in sorted(H.edges(data=True)):
          if (u,v) in shown: continue
          w_old = G.get_edge(u,v)
          if w_old != w:
@@ -802,7 +837,7 @@ class MetricShell(Cmd):
 
       applied = {}
       if apply.lower() == 'y':
-         for (u,v,w) in H.edges():
+         for (u,v,w) in H.edges(data=True):
             if (u,v) in applied: continue
             w_old = G.get_edge(u,v)
             if w_old != w:
@@ -932,7 +967,7 @@ class MetricShell(Cmd):
       graphdata['nodegroups'] = self.simulation.get_node_groups(path=path)
       graphdata['edgegroups'] = self.simulation.get_edge_groups(path=paths)
       graphdata['labels'] = utils.short_names(G.nodes())
-      graphdata['edgelabels'] = utils.edge_labels(G.edges(),
+      graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
                                                   graphdata['edgegroups'])
       graphdata['pos'] = self.model.get_positions(G.nodes())
       graphdata['title'] = "Simulated path from %s to %s (cost: %d, %s hops)" \
@@ -1020,7 +1055,7 @@ class MetricShell(Cmd):
       geg   = self.simulation.get_diff_edge_groups(paths,spaths)
 
       lb   = utils.short_names(H.nodes())
-      elb  = utils.edge_labels(H.edges(), geg)
+      elb  = utils.edge_labels(H.edges(data=True), geg)
       pos = self.model.get_positions(H.nodes())
       graphdata['title'] = "Simulated path from %s to %s (cost: %d, %s hops)" \
                            % (a, b, slength, shops)
@@ -1122,7 +1157,7 @@ class MetricShell(Cmd):
       graphdata['nodegroups'] = self.model.get_node_groups(path=path)
       graphdata['edgegroups'] = self.model.get_edge_groups(path=paths)
       graphdata['labels'] = utils.short_names(G.nodes())
-      graphdata['edgelabels'] = utils.edge_labels(G.edges(),
+      graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
                                                   graphdata['edgegroups'])
       graphdata['pos'] = self.model.get_positions(G.nodes())
       graphdata['title'] = "Path(s) from %s to %s (cost: %d, %s hops)" \
@@ -1229,7 +1264,7 @@ Available commands:
       return []
 
    def complete_plot(self, text, line, begidx, endidx):
-      return filter(lambda x: x.startswith(text), ['with-load'])
+      return filter(lambda x: x.startswith(text), ['with-load', 'all-metrics'])
 
    def complete_simplot(self, text, line, begidx, endidx):
       return self.complete_plot(text, line, begidx, endidx)
@@ -1238,7 +1273,13 @@ Available commands:
       return self.complete_path(text, line, begidx, endidx)
 
    def complete_linkinfo(self, text, line, begidx, endidx):
-      return self.complete_path(text, line, begidx, endidx)   
+      length = len(line.split())
+      if length == 3 and not text:
+         return ['with-transit']
+      elif length == 4:
+         return filter(lambda x: x.startswith(text), ['with-transit'])
+      else:
+         return self.complete_path(text, line, begidx, endidx)   
    
    def complete_reroute(self, text, line, begidx, endidx):
       length = len(line.split())
@@ -1372,12 +1413,15 @@ Available commands:
       
    def help_plot(self):
       print """
-            Usage: plot (with-load)
+            Usage: plot (with-load) (all-metrics)
 
             Display metrics and topology graphically.
 
             If given the 'with-load' option, instead
             display current link utilizations.
+
+            If given the 'all-metrics' option, default metrics
+            will also be drawn.
             """
 
    def help_asymmetric(self):
@@ -1421,12 +1465,15 @@ Available commands:
 
    def help_linkinfo(self):
       print """
-            Usage: linkinfo <source> <destination>
+            Usage: linkinfo <source> <destination> (with-transit)
 
             Show various information about the link
             between the source and destination nodes.
             If available, also shows the capacity and
             current utilization i Mbit/s.
+
+            If given the with-transit option show (start,end) pairs
+            using this link as a transit link.
             """
 
    def help_listequal(self):
@@ -1464,6 +1511,9 @@ Available commands:
 
             If given the 'with-load' option, instead
             display current simulated link utilizations.
+
+            If given the 'all-metrics' option, default metrics
+            will also be drawn.
             """
 
    def help_stats(self):
