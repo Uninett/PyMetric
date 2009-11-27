@@ -35,8 +35,8 @@ def edge_labels(edges, edgegroups=[], suppress_default=True):
                   m = str(metric)
                   if metric == 10 and suppress_default:
                       m = ""
-                  if type.endswith("opath") and x != w:
-                     m = "%s (%s)" % (str(int(x)), str(int(w)))
+                  if type.endswith("opath") and x['weight'] != w['weight']:
+                     m = "%s (%s)" % (str(int(x['weight'])), str(int(w['weight'])))
                   l = (i, m, type.startswith('main'))
                   labels.append((i, m, type.startswith('main')))
                   edgedone[(u,v)] = l
