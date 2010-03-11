@@ -126,7 +126,10 @@ def calc_ratio(G, loads, u, v, discard_inverse=False, no_diff=False, exclude_edg
           #totload -= loads[(u1,v1)] * calc_ratio(G, loads, u,v)
           continue
       if discard_inverse and (neighbor,u) == (v,u): continue
-      sum += float(loads[(neighbor,u)])
+      if not (neighbor,u) in loads:
+          sum += 0.0
+      else:
+          sum += float(loads[(neighbor,u)])
   ee = []
   #if discard_inverse: ee += [(v,u)]
   ndiff = node_diff_in_out(G, loads, u, False, ee)
@@ -149,9 +152,15 @@ def node_diff_in_out(G, loads, node, inverse=False, exclude_edges=[]):
 
    for neighbor in G[node]:
       if (node,neighbor) not in exclude_edges:
-         sum_out += loads[(node,neighbor)]
+         if (node,neighbor) not in loads:
+             sum_out += 0.0
+         else:
+             sum_out += loads[(node,neighbor)]
       if (neighbor,node) not in exclude_edges:
-         sum_in += loads[(neighbor,node)]
+         if (neighbor,node) not in loads:
+             sum_in += 0.0
+         else:
+             sum_in += loads[(neighbor,node)]
 
    if inverse:
       return sum_in - sum_out

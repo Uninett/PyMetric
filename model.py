@@ -2130,7 +2130,10 @@ class Simulation:
          if adjustments[(u,v)] == 0: continue
          if self.graph.has_edge(u,v):
             #print "Final adjustment for (%s, %s) += %s" % (u,v, adjustments[(u,v)])
-            newloads[(u,v)] += adjustments[(u,v)]
+            if (u,v) in newloads:
+               newloads[(u,v)] += adjustments[(u,v)]
+            else:
+               newloads[(u,v)] = adjustments[(u,v)]
 
       for (u,v) in sorted(newloads):
          if newloads[(u,v)] < 0:
