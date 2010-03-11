@@ -171,6 +171,7 @@ class PlotUI:
 
          elif anycast:
 
+            ci = 0
             for group in data['acnodes'] + ['multi']:
 
                if not group in PlotUI.nodecolors:
