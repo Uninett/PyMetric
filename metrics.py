@@ -21,10 +21,10 @@ is a LSP)
 """
 __version__   = "0.9-pre (git/master)"
 __author__    = """Morten Knutsen (morten.knutsen@uninett.no)"""
-__copyright__ = """Copyright (C) 2009
+__copyright__ = """Copyright (C) 2009-2010
 Morten Knutsen <morten.knutsen@uninett.no>
 """
-import matplotlib
+import matplotlib, scripting
 
 if __name__ == '__main__':
 
@@ -44,12 +44,30 @@ if __name__ == '__main__':
       matplotlib.interactive(True)
       cli.cmdloop()
    else:
-      outpng = sys.argv[2]
+      scriptFile = None
+      outpng = None
+      if sys.argv[2] == "-s":
+         if not len(sys.argv) == 4:
+             print "-s requires a script-file"
+             sys.exit(1)
+         else:
+            scriptFile = sys.argv[3]
+      else:
+         outpng = sys.argv[2]
+
       matplotlib.use("cairo")
       matplotlib.interactive(False)
+      old_stdout = sys.stdout
+      sys.stdout = open("/dev/null", "w")
       exec("from command import MetricShell")
       cli = MetricShell(filename=infile)
       cli.version = __version__
-      cli.onecmd("png %s" % outpng)
 
+      if outpng:
+         cli.onecmd("png %s" % outpng)
+         sys.exit(0)
+
+      if scriptFile:
+         se = scripting.ScriptEngine(cli)
+         sys.exit(se.run(scriptFile))
 
