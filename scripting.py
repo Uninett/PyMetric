@@ -23,7 +23,11 @@ class ScriptEngine():
       self.current_script = None
 
    def run(self, script):
-      fh = open(script, "r")
+      try:
+         fh = open(script, "r")
+      except:
+         print >> sys.stderr, "Something went wrong when trying to open scriptfile"
+         return 1
       self.state = self.STATE_OPEN
       self.current_script = script
       self.savedata = {}
@@ -173,7 +177,11 @@ class ScriptEngine():
       return retdata
 
    def _write_savedata(self):
-      fh = open(self.current_script + ".save", "w")
+      try:
+         fh = open(self.current_script + ".save", "w")
+      except IOError:
+         print >> sys.stderr, "Warning: Could not open savefile for writing"
+         return
       for key in self.savedata:
          fh.write("%s %s\n" % (key, self.savedata[key].__repr__()))
       fh.close()
