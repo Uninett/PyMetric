@@ -23,6 +23,9 @@ class ScriptEngine():
       self.current_script = None
 
    def run(self, script):
+      if not os.path.isfile(script):
+         print >> sys.stderr, "No such file: %s" % script
+         return 1
       try:
          fh = open(script, "r")
       except:
