@@ -1,6 +1,6 @@
 # Example PyMetric script file
 #
-#
+# Documentation to follow later
 
 begin
   linkfail oslo-gw trd-gw1
