@@ -1,0 +1,14 @@
+# Example PyMetric script file
+#
+#
+
+begin
+  linkfail oslo-gw trd-gw1
+  assert path oslo-gw trd-gw1 eq [['oslo-gw', 'stolav-gw1', 'stolav-gw4', 'hovedbygget-gw1', 'trd-gw1']]
+  save path oslo-gw trd-gw1
+reset
+  linkfail trd-gw1 tromso-gw2
+  linkfail hovedbygget-gw1 tromso-gw1
+  assert path trd-gw1 tromso-gw2 eq saved-path
+  save path trd-gw1 tromso-gw2
+end
