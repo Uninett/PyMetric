@@ -1,3 +1,10 @@
+PyMetric 0.9
+  
+  * Fix small bugs left over from the 1.00-API rewrite.
+  * Fix bug in load simulation when missing traffic data for a link.
+  * Basic scripting support (used for validation)
+  * Less verbosity in non-interactive mode.
+
 PyMetric 0.8 (20091014)
 
   * Add GPLv2 licence
