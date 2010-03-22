@@ -1,4 +1,8 @@
-PyMetric 0.9
+PyMetric 0.9.1 (20100322)
+
+  * Bugfix for anycast plot colors.
+
+PyMetric 0.9 (20100322)
   
   * Fix small bugs left over from the 1.00-API rewrite.
   * Fix bug in load simulation when missing traffic data for a link.
