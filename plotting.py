@@ -173,13 +173,11 @@ class PlotUI:
 
             ci = 0
             for group in data['acnodes'] + ['multi']:
-
-               if not group in PlotUI.nodecolors:
-                  if ci < len(PlotUI.areacolors):
-                     PlotUI.nodecolors[group] = PlotUI.areacolors[ci]
-                     ci += 1
-                  else:
-                     PlotUI.nodecolors[group] = random.choice(PlotUI.areacolors)
+               if ci < len(PlotUI.areacolors):
+                  PlotUI.nodecolors[group] = PlotUI.areacolors[ci]
+                  ci += 1
+               else:
+                  PlotUI.nodecolors[group] = random.choice(PlotUI.areacolors)
 
             nodecolors = []
             for i in range(len(nodes)):
