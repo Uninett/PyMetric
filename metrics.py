@@ -19,7 +19,7 @@ its job regardless of the routing protocol used (as long as it
 is a LSP)
 
 """
-__version__   = "0.9"
+__version__   = "1.0-pre (git/master)"
 __author__    = """Morten Knutsen (morten.knutsen@uninett.no)"""
 __copyright__ = """Copyright (C) 2009-2010
 Morten Knutsen <morten.knutsen@uninett.no>
