@@ -67,7 +67,7 @@ class MetricShell(Cmd):
    
    def completenames(self, text, *ignored):
       dotext = 'do_'+text
-      return [a[3:] + " " for a in self.get_names() if a.startswith(dotext)]         
+      return [a[3:] for a in self.get_names() if a.startswith(dotext)]
 
    def postcmd(self,stop,line):
       if self.simulation.is_active():
@@ -1224,11 +1224,9 @@ Available commands:
              ((length == 2 and not text) or length >= 3):
          startnode = tokens[1]
          return filter(lambda x: x.startswith(text),
-                       map(lambda x: x+" ",
-                           model.graph.neighbors(startnode)))
+                           model.graph.neighbors(startnode))
       return filter(lambda x: x.startswith(text),
-                    map(lambda x: x+" ",
-                        model.graph.nodes()))
+                        model.graph.nodes())
 
    def complete_colors(self, text, line, begidx, endidx):
       return ['on', 'off']
@@ -1304,8 +1302,7 @@ Available commands:
             return []
          if tokens[1] == 'remove':
             return filter(lambda x: x.startswith(text),
-                          map(lambda x: x+" ",
-                              self.simulation.get_anycast_nodes()))
+                          self.simulation.get_anycast_nodes())
          return self.complete_path(text, line, begidx, endidx)
 
    #
