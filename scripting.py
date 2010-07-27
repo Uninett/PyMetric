@@ -108,9 +108,9 @@ class ScriptEngine():
          print >> sys.stderr, "Syntax error at line %d: Missing 'begin' statement before 'assert'" % self.current_line
          self.state = self.STATE_ERROR
          return
-      if not self.state == self.STATE_SIM:
-         print >> sys.stderr, "Warning: assertion not computed, nothing has been changed! (line %d)" % self.current_line
-         return
+      #if not self.state == self.STATE_SIM:
+      #   print >> sys.stderr, "Warning: assertion not computed, nothing has been changed! (line %d)" % self.current_line
+      #   return
       if args[3] == 'eq' and args[4] == 'saved-path':
          self.loaddata = self._read_savedata()
          link_key = "%s###%s" % (args[1], args[2])
@@ -120,7 +120,7 @@ class ScriptEngine():
          else:
             simpaths = self.simulation.path(args[1], args[2])[1]
             if not self.loaddata[link_key] == simpaths:
-               print >> sys.stderr, "     FAIL: Assertion failed (line %d)" %  self.current_line
+               print >> sys.stderr, "     FAIL: Assertion failed for %s -> %s (line %d)" %  (self.current_line, args[1], args[2])
                print >> sys.stderr, "      Got: %s" % ("\n           ".join(map(str, simpaths)))
                print >> sys.stderr, " Expected: %s" % ("\n           ".join(map(str, self.loaddata[link_key])))
                self.state = self.STATE_FAIL
