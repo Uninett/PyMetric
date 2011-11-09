@@ -1845,10 +1845,10 @@ class Simulation:
       G = self.graph
       H = self.graph.copy()
 
-      edges = sorted(H.edges(data=True), cmp=lambda x,y: cmp(y[2], x[2]) \
+      edges = sorted(H.edges(data=True), cmp=lambda x,y: cmp(y[2]['weight'], x[2]['weight']) \
                                     or cmp(ebc[(x[0],x[1])],
                                            ebc[(y[0],y[1])]))
-      
+
       finished = False
 
       while not finished:
@@ -1856,6 +1856,7 @@ class Simulation:
          adjustment_found = False
 
          for (u,v,w) in edges:
+            w = w['weight']
             if not w == H[v][u]['weight']:
                continue
 

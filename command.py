@@ -820,6 +820,7 @@ class MetricShell(Cmd):
       header = False
       for (u,v,w) in sorted(H.edges(data=True)):
          if (u,v) in shown: continue
+         w = H[u][v]['weight']
          w_old = G[u][v]['weight']
          if w_old != w:
             if not header:
@@ -840,6 +841,7 @@ class MetricShell(Cmd):
       if apply.lower() == 'y':
          for (u,v,w) in H.edges(data=True):
             if (u,v) in applied: continue
+            w = H[u][v]['weight']
             w_old = G[u][v]['weight']
             if w_old != w:
                self.simulation.change_metric(u,v,w, True)
