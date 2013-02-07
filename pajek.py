@@ -17,13 +17,14 @@ __author__ = """Aric Hagberg (hagberg@lanl.gov)"""
 #    Distributed under the terms of the GNU Lesser General Public License
 #    http://www.gnu.org/copyleft/lesser.html
 import networkx
-from networkx.utils import is_string_like,_get_fh
+from networkx.utils import is_string_like
 
 def read_pajek(path):
     """Read graph in pajek format from path. Returns an XGraph or XDiGraph.
     """
-    fh=_get_fh(path,mode='r')        
-    G=parse_pajek(fh)
+    fh=open(path,mode='r')
+    lines = fh.readlines()
+    G=parse_pajek(lines)
     return G
 
 def parse_pajek(lines):

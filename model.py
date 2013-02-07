@@ -438,7 +438,7 @@ class Model:
             return True
       return False
    
-   def get_edge_groups(self, threshold=0.01, n=20, edges=None, path=None):
+   def get_edge_groups(self, threshold=0.020, n=20, edges=None, path=None):
       groups, mpath_edges, rpath_edges = {}, [], []
       multi = False
       mpath = path
@@ -601,7 +601,11 @@ class Model:
       return G
 
    def _refresh_betweenness(self):
-      self.betweenness = nx.load_centrality(self.G, weighted_edges=True)
+      self.betweenness = None
+      if nx.__version__ > "1.5":
+         self.betweenness = nx.load_centrality(self.G, weight='weight')
+      else:
+         self.betweenness = nx.load_centrality(self.G, weighted_edges=True)
       self.edge_betweenness = nx.edge_betweenness(self.G, True, True)
 
    def _refresh_all_paths(self):
@@ -1892,7 +1896,11 @@ class Simulation:
       return H
 
    def _refresh_betweenness(self):
-      self.betweenness = nx.load_centrality(self.graph, weighted_edges=True)
+      self.betweenness = None
+      if nx.__version__ > "1.5":
+         self.betweenness = nx.load_centrality(self.graph, weight='weight')
+      else:
+         self.betweenness = nx.load_centrality(self.graph, weighted_edges=True)
       self.edge_betweenness = nx.edge_betweenness(self.graph, True, True)
 
    def _refresh_effects(self, OG=None, NG=None):

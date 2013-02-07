@@ -50,6 +50,7 @@ class PlotUI:
                  'normalupath'   : 2.5,
                  'normaloaltpath': 2,
                  'normalualtpath': 2.5,
+                100000000        : 15,
                  10000000        : 10,
                   2488000        : 6,
                   1000000        : 3,
