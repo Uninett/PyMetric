@@ -14,10 +14,8 @@ the user with traffic engineering.
 PyMetric should perform its job regardless of the routing protocol
 used (as long as it is a LSP).
 
-Comments, feature requests and bug reports should go to the Trac page
-at 
-
-   http://trac.uninett.no/pymetric
+Comments, feature requests and bug reports should be made here on
+Github
 
 or sent to
 
