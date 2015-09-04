@@ -17,11 +17,11 @@ On NetBSD use the following packages:
   math/py-matplotlib-tk
   devel/py-readline
 
-Note: Starting with the 0.8 release PyMetric *requires* NetworkX
-version >=1.00rc1, if your distro doesn't have a new enough package,
-either build one yourself, or use easy_install:
+PyMetric ships with a requirements file for use with pip, so you can do:
 
- $ easy_install install networkx
+  pip install -r requirements.txt
+
+to install dependencies, either system wide or in a virtualenv env.
 
 For proper alpha-blended edges the Tk version should be >= 8.5, though
 this is not *required*
