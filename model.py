@@ -1,6 +1,7 @@
 import networkx as nx
 from pajek import read_pajek
 import utils
+import distutils.version
 
 class Model:
 
@@ -602,7 +603,7 @@ class Model:
 
    def _refresh_betweenness(self):
       self.betweenness = None
-      if nx.__version__ > "1.5":
+      if distutils.version.StrictVersion(nx.__version__) > distutils.version.StrictVersion("1.5"):
          self.betweenness = nx.load_centrality(self.G, weight='weight')
       else:
          self.betweenness = nx.load_centrality(self.G, weighted_edges=True)
@@ -1897,7 +1898,7 @@ class Simulation:
 
    def _refresh_betweenness(self):
       self.betweenness = None
-      if nx.__version__ > "1.5":
+      if distutils.version.StrictVersion(nx.__version__) > distutils.version.StrictVersion("1.5"):
          self.betweenness = nx.load_centrality(self.graph, weight='weight')
       else:
          self.betweenness = nx.load_centrality(self.graph, weighted_edges=True)
