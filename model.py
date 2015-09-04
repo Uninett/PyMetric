@@ -607,7 +607,7 @@ class Model:
          self.betweenness = nx.load_centrality(self.G, weight='weight')
       else:
          self.betweenness = nx.load_centrality(self.G, weighted_edges=True)
-      self.edge_betweenness = nx.edge_betweenness(self.G, True, True)
+      self.edge_betweenness = nx.edge_betweenness(self.G, normalized=True, weight=True)
 
    def _refresh_all_paths(self):
       for node in self.G:
@@ -1902,7 +1902,7 @@ class Simulation:
          self.betweenness = nx.load_centrality(self.graph, weight='weight')
       else:
          self.betweenness = nx.load_centrality(self.graph, weighted_edges=True)
-      self.edge_betweenness = nx.edge_betweenness(self.graph, True, True)
+      self.edge_betweenness = nx.edge_betweenness(self.graph, normalized=True, weight=True)
 
    def _refresh_effects(self, OG=None, NG=None):
 

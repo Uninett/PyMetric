@@ -86,8 +86,8 @@ class MetricShell(Cmd):
             difflen = nx.average_shortest_path_length(self.simulation.graph)\
                     - nx.average_shortest_path_length(self.model.G)
 
-            components = nx.connected_component_subgraphs(
-                           self.simulation.graph.to_undirected())
+            components = list(nx.connected_component_subgraphs(
+                           self.simulation.graph.to_undirected()))
             cnodes = 0
             if len(components) > 1:
                cnodes = sum([len(g.nodes()) for g in components[1:]])
