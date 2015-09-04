@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """
 PyMetric is a network simulation and visualisation tool. It
 allows the user to trace paths through his network, given a
