@@ -308,7 +308,6 @@ class PlotUI:
             t.set_color('#bbbbbb')
          
          cb.set_label("Link utilization", color='#bbbbbb')         
-      f.set_lod(True)
       fm = plt.get_current_fig_manager()      
 
       if (not self.has_plotted) and interactive:
