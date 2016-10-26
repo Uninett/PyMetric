@@ -244,8 +244,13 @@ class PlotUI:
             edgecolors = [max(edge_cmap[(edges[i][0], edges[i][1])],
                               edge_cmap[(edges[i][1], edges[i][0])])
                           for i in range(len(edges))]
-            edgewidths = [PlotUI.edgewidths[edge_capa[(edges[i][0], edges[i][1])]]
-                          for i in range(len(edges))]            
+            try:
+               edgewidths = [PlotUI.edgewidths[edge_capa[(edges[i][0], edges[i][1])]]
+                             for i in range(len(edges))]
+            except KeyError:
+               print "Error: Unknown or missing capacity information provided to plot command"
+               return
+
             self.edgec = nx.draw_networkx_edges(graph, pos=data['pos'],
                                 edgelist=edges,
                                 width=edgewidths,

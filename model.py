@@ -424,7 +424,13 @@ class Model:
       return int(linkinfo['c'])
 
    def get_link_utilization(self, u, v):
-      return self.get_out_link_load(u,v)/float(self.get_link_capacity(u,v))
+      try:
+         utilz = self.get_out_link_load(u,v)/float(self.get_link_capacity(u,v))
+      except ZeroDivisionError:
+         print "Warning: Could not get link capacity for link:"
+         print "%s => %s" % (u,v)
+         utilz = 0.0
+      return utilz
 
    def get_link_utilizations(self):
       utils = {}
