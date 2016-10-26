@@ -55,14 +55,15 @@ def edge_labels(edges, edgegroups=[], suppress_default=True):
 
 def cap2str(capacity):
 
-    mapping = {  1984    : '2Mbit/s',
-                34000    : '34Mbit/s',
-                34010    : '34Mbit/s',
-                100000   : '100Mbit/s',
-                155000   : '155Mbit/s',
-                1000000  : '1Gbit/s',
-                2488000  : '2.5Gbit/s',
-                10000000 : '10Gbit/s'
+    mapping = {  1984     : '2Mbit/s',
+                34000     : '34Mbit/s',
+                34010     : '34Mbit/s',
+                100000    : '100Mbit/s',
+                155000    : '155Mbit/s',
+                1000000   : '1Gbit/s',
+                2488000   : '2.5Gbit/s',
+                10000000  : '10Gbit/s',
+                100000000 : '100Gbit/s'
               }
 
     if type(capacity) != type(int):
