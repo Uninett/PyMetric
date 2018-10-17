@@ -1504,7 +1504,7 @@ class Simulation:
 
          self.graph.add_node(router)
          for (u, v, w) in edges:
-            self.graph.add_edge(u, v, w)
+            self.graph.add_edge(u, v, **w)
 
       del self.changes[idx]
 
