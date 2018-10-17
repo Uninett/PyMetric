@@ -85,9 +85,9 @@ def parse_pajek(lines):
                 edge_data.update(extra_attr)
                 if G.has_edge(u,v):
                     if G[u][v]['value'] > float(w):
-                        G.add_edge(u,v,edge_data)
+                        G.add_edge(u,v,**edge_data)
                 else:
-                    G.add_edge(u,v,edge_data)
+                    G.add_edge(u,v,**edge_data)
     if not G.name:
         raise Exception("No graph definition found")
     if len(G.nodes()) == 0:
