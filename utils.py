@@ -5,7 +5,7 @@ def reciprocity(G):
     """Calculate reciprocity of graph, i.e. the ratio of the edges in
     one direction that have and edge going in the other direction."""
     return sum([G.has_edge(e[1], e[0]) 
-    for e in G.edges_iter()]) / float(G.number_of_edges())
+    for e in G.edges]) / float(G.number_of_edges())
 
 def short_names(names):
    labels = {}
