@@ -30,7 +30,7 @@ class MetricShell(Cmd):
       self.config = Config()
 
       readline.set_completer_delims(" ")
-      
+
       Cmd.__init__(self)
 
       self.termcolor = True
@@ -48,13 +48,13 @@ class MetricShell(Cmd):
          self.model.refresh_from_file(self.filename)
          if linkloads:
             self.model.refresh_linkloads()
-            
+
       self.simulation = Simulation(self.model)
       self.gui = PlotUI(self)
       self.tw = TextWrapper(initial_indent=' '*4,
                             subsequent_indent=' '*4,
                             width=80)
-      
+
       self.intro = self.bt("PyMetric interactive shell, type 'help' for help")
 
       self.prompt = self.defaultprompt
@@ -70,7 +70,7 @@ class MetricShell(Cmd):
    def fromui(self, node):
       if not self.uiwait:
          self.do_info(node)
-   
+
    def completenames(self, text, *ignored):
       dotext = 'do_'+text
       return [a[3:] for a in self.get_names() if a.startswith(dotext)]
@@ -119,7 +119,7 @@ class MetricShell(Cmd):
                      uzs_75_cnt += 1
                   elif uzs[(u,v)] >= 0.5:
                      uzs_50_cnt += 1
-                     
+
             promptstring += "(" \
                          + self.pbblt("%dc" % self.simulation.no_changes()) \
                          + "/" \
@@ -133,10 +133,10 @@ class MetricShell(Cmd):
                if uzs_95_cnt:
                   promptstring +=  self.prt("%du" % uzs_95_cnt)
                else:
-                  promptstring += self.pblt("%du" % uzs_95_cnt)            
+                  promptstring += self.pblt("%du" % uzs_95_cnt)
             if difflen and difflen >= 0.01:
                promptstring += "/"
-               promptstring += self.pblt("%.2fL" % difflen)            
+               promptstring += self.pblt("%.2fL" % difflen)
             if diffrad:
                promptstring += "/"
                promptstring += self.pblt("%sr" % diffrad)
@@ -182,7 +182,7 @@ class MetricShell(Cmd):
       else:
          print("Unknown version")
       return
-   
+
    def do_colors(self, args):
       color = self.termcolor
       if args:
@@ -199,13 +199,13 @@ class MetricShell(Cmd):
       self._colormode(color)
       print("Colormode is now %s" % self.termcolor)
       return
-         
+
    def do_reload(self, args):
       if self.simulation.is_active():
          print("Please end simulation before reload.")
          return
       self.model.refresh_from_file(self.filename)
-      
+
       if self.gui.has_plotted:
          self.do_plot("")
       return
@@ -223,7 +223,7 @@ class MetricShell(Cmd):
          return
       print("Couldn't refresh load data")
       return
-      
+
    def do_load(self, args):
       if self.simulation.is_active():
          print("Please end simulation before loading new file.")
@@ -239,14 +239,14 @@ class MetricShell(Cmd):
          self.filename = args
       except IOError:
          print("ERROR: Could not read file, does it exist?")
-         self.model.refresh_from_file(self.filename)         
+         self.model.refresh_from_file(self.filename)
       except:
-         import traceback         
+         import traceback
          traceback.print_exc()
          print()
          print("ERROR: Load failed, model not changed.")
          self.model.refresh_from_file(self.filename)
-      return         
+      return
 
    def do_utilizations(self, args):
       if self.simulation.is_active():
@@ -277,7 +277,7 @@ class MetricShell(Cmd):
       for (u,v) in sorted_utils[:10]:
          print("  * %s->%s: %.2f%%" % (u,v, utils[(u,v)]*100))
       print()
-      
+
    def do_list(self, args):
       print("List of nodes:")
       print(sorted(self.model.get_nodes()))
@@ -339,13 +339,13 @@ class MetricShell(Cmd):
             capa = {}
             for (u,v) in self.simulation.graph.edges():
                cmap[(u,v)] = self.simulation.get_link_utilization(u,v)
-               capa[(u,v)] = self.model.get_link_capacity(u,v)            
+               capa[(u,v)] = self.model.get_link_capacity(u,v)
          else:
             print("Warning: No linkloads are defined. Use 'linkloads' to update.")
       elif self.simulation.get_anycast_nodes():
          self.do_anycast("")
          return
-      
+
       if 'all-metrics' in subargs:
          suppress_default_metric = False
 
@@ -355,7 +355,7 @@ class MetricShell(Cmd):
       graphdata['edgegroups'] = self.simulation.get_edge_groups()
 
       G = self.simulation.graph
-      
+
       graphdata['labels'] = utils.short_names(G.nodes())
       graphdata['edgelabels'] = utils.edge_labels(G.edges(data=True),
                                                   graphdata['edgegroups'],
@@ -364,8 +364,8 @@ class MetricShell(Cmd):
 
       graphdata['title'] = "Simulated topology"
       if cmap:
-         graphdata['title'] += " - Loads and Capacity view"      
-      self.gui.plot(G, graphdata, edge_cmap=cmap, edge_capa=capa)      
+         graphdata['title'] += " - Loads and Capacity view"
+      self.gui.plot(G, graphdata, edge_cmap=cmap, edge_capa=capa)
 
    def do_png(self, args):
       fname = "isis-metrics.png"
@@ -383,7 +383,7 @@ class MetricShell(Cmd):
          self.do_plot(plotarg)
       self.gui.savefig(fname, load)
       return
-      
+
    def do_plot(self, args):
       self.gui.clear()
       subargs = args.split()
@@ -400,15 +400,15 @@ class MetricShell(Cmd):
             capa = {}
             for (u,v) in self.model.graph.edges():
                cmap[(u,v)] = self.model.get_link_utilization(u,v)
-               capa[(u,v)] = self.model.get_link_capacity(u,v)            
+               capa[(u,v)] = self.model.get_link_capacity(u,v)
          else:
             print("Warning: No linkloads are defined. Use 'linkloads' to update.")
-      
+
       if 'all-metrics' in subargs:
          suppress_default_metric = False
 
       graphdata = {}
-      
+
       G = self.model.G
       graphdata['nodegroups'] = self.model.get_node_groups()
       graphdata['edgegroups'] = self.model.get_edge_groups()
@@ -436,8 +436,8 @@ class MetricShell(Cmd):
       self.gui.clear()
 
       graphdata = {}
-      
-      graphdata['nodegroups'] = self.model.get_node_groups()      
+
+      graphdata['nodegroups'] = self.model.get_node_groups()
       graphdata['areagroups'] = areas
       graphdata['edgegroups'] = self.model.get_edge_groups()
       graphdata['labels'] = utils.short_names(G.nodes())
@@ -446,13 +446,13 @@ class MetricShell(Cmd):
       graphdata['pos'] = self.model.get_positions(G.nodes())
       graphdata['title'] = "Current topology with IS-IS areas"
       self.gui.plot(G, graphdata, areagroups=True)
-      
+
    def do_stats(self, args):
       model = self.model
       stats = self.model.get_stats()
       if self.simulation.is_active():
-         model = self.simulation         
-      stats = model.get_stats()         
+         model = self.simulation
+      stats = model.get_stats()
       self.tw.initial_indent=''
       self.tw.subsequent_indent=' '*18
       self.tw.width=80-18
@@ -488,10 +488,10 @@ class MetricShell(Cmd):
 
       self.tw.initial_indent = ''
       self.tw.subsequent_indent = ' '*17
-      self.tw.width = 80 - 17         
+      self.tw.width = 80 - 17
       print("Information for link (%s,%s):" % (u,v))
       infohash = model.get_link_info(u,v)
-      for key in ['name', 'betweenness', 
+      for key in ['name', 'betweenness',
                   'capacity', 'load', 'utilization']:
          if key not in infohash:
             continue
@@ -522,11 +522,11 @@ class MetricShell(Cmd):
              print("  * %-16s -> %s" % (start_node, self.tw.fill(", ".join(sorted(transit_by_start_node[start_node])))))
 
       self.tw.width = 80
-      
+
    def do_info(self, args):
       model = self.model
       if self.simulation.is_active():
-         model = self.simulation               
+         model = self.simulation
       if not args:
          print("Must specify a node")
          return
@@ -537,7 +537,7 @@ class MetricShell(Cmd):
 
       self.tw.initial_indent = ''
       self.tw.subsequent_indent = ' '*17
-      self.tw.width = 80 - 17         
+      self.tw.width = 80 - 17
       print("Information for node %s:" % (args))
       infohash = model.get_node_info(args)
       for key in ['name', 'degree', 'eccentricity',
@@ -554,7 +554,7 @@ class MetricShell(Cmd):
       print()
 
       self.tw.width = 80
-      
+
    def do_simulation(self, args):
       if args == 'stop':
          if self.simulation.is_active():
@@ -590,20 +590,20 @@ class MetricShell(Cmd):
          return
       print("Done")
       return
-   
+
    def do_stop(self, args):
       if not self.simulation.is_active():
          print("No simulation is active, type 'simulation start' to start one")
          return
       self.do_simulation("stop")
-      
+
    def do_changes(self, args):
       if not self.simulation.is_active():
          print("No simulation is active, type 'simulation start' to start one")
          return
       if not self.simulation.has_changes():
          print("No changes")
-         return      
+         return
       print("Simulated changes:")
 
       for (i, change) in enumerate(self.simulation.get_changes_strings()):
@@ -619,7 +619,7 @@ class MetricShell(Cmd):
 
       if 'no-effects' in subargs:
          return
-      
+
       if not self.simulation.has_effects():
          print("No effect on model")
          return
@@ -655,7 +655,7 @@ class MetricShell(Cmd):
       print("  * Summary:")
 
       srcsummary, dstsummary = self.simulation.get_effects_summary()
-      
+
       for src in sorted(srcsummary):
          count = len(srcsummary[src])
          if count > 3:
@@ -668,7 +668,7 @@ class MetricShell(Cmd):
                print()
             else:
                print()
-            
+
       for dest in sorted(dstsummary):
          count = len(dstsummary[dest])
          if count == 0: continue
@@ -704,8 +704,8 @@ class MetricShell(Cmd):
             graphdata = {}
             G = self.simulation.graph
             acgroups = self.simulation.get_anycast_groups_by_source()
-         
-            graphdata['nodegroups'] = self.simulation.get_node_groups()      
+
+            graphdata['nodegroups'] = self.simulation.get_node_groups()
             graphdata['acnodes'] = acnodes
             graphdata['acgroups'] = acgroups
             graphdata['edgegroups'] = self.simulation.get_edge_groups()
@@ -731,19 +731,19 @@ class MetricShell(Cmd):
             for node in subargs[1:]:
                if not node in self.simulation.graph.nodes():
                   print("Invalid node: %s" % node)
-                  return            
+                  return
             self.simulation.add_anycast_nodes(subargs[1:])
          elif subargs[0] == 'remove':
             for node in subargs[1:]:
                if not node in self.simulation.graph.nodes():
                   print("Invalid node: %s" % node)
-                  return            
-            self.simulation.remove_anycast_nodes(subargs[1:])         
+                  return
+            self.simulation.remove_anycast_nodes(subargs[1:])
          else:
             print("Invalid input")
             return
             self.help_anycast()
-      
+
    def do_reroute(self, args):
       if not self.simulation.is_active():
          print("Must be in simulation mode to run reroute")
@@ -762,9 +762,9 @@ class MetricShell(Cmd):
             equal = True
          else:
             print("Warning: Last argument (%s) ignored" % subargs[3])
-            
+
       ret = self.simulation.reroute(start, end, via, equal)
-      
+
       if not ret[0]:
          print("No solution could be found..")
          return
@@ -772,9 +772,9 @@ class MetricShell(Cmd):
       if not ret[1]:
          print("The path allready goes through %s" % via)
          return
-      
+
       print("The following metric changes are suggested:")
-      
+
       G = self.simulation.graph
       shown = {}
       for e in sorted(ret[1]):
@@ -790,7 +790,7 @@ class MetricShell(Cmd):
                                               newstr.rjust(2)))
             shown[(u,v)] = True
             shown[(v,u)] = True
-            
+
       apply = input("Apply changes to current simulation (Y/N)? ")
 
       applied = {}
@@ -806,9 +806,9 @@ class MetricShell(Cmd):
       else:
          print("Not applied.")
       return
-   
 
-      
+
+
    def do_minimize(self, args):
       if not self.simulation.is_active():
          print("Must be in simulation mode to run minimize")
@@ -817,9 +817,9 @@ class MetricShell(Cmd):
       G = self.simulation.graph
 
       print("Please wait, this can take a little while...")
-      
+
       H = self.simulation.minimal_link_costs()
-      
+
       shown = {}
       header = False
       for (u,v,w) in sorted(H.edges(data=True)):
@@ -838,7 +838,7 @@ class MetricShell(Cmd):
                                               newstr.rjust(2)))
             shown[(u,v)] = True
             shown[(v,u)] = True
-            
+
       apply = input("Apply changes to current simulation (Y/N)? ")
 
       applied = {}
@@ -854,7 +854,7 @@ class MetricShell(Cmd):
       else:
          print("Not applied.")
       return
-      
+
    def do_metric(self, args):
       if not self.simulation.is_active():
          print("Must be in simulation mode to run metric changes")
@@ -884,8 +884,8 @@ class MetricShell(Cmd):
                self.simulation.undo(i+1)
       if not self.simulation.change_metric(n1, n2, metric,bidir=bidir):
          print("No link from %s to %s" % (n1, n2))
-      
-   
+
+
    def do_linkfail(self, args):
       if not self.simulation.is_active():
          print("Must be in simulation mode to run link changes")
@@ -915,13 +915,13 @@ class MetricShell(Cmd):
       subargs = args.split()
       if not len(subargs) == 1:
          print("Invalid input")
-         self.help_routerfail()      
+         self.help_routerfail()
          return
       n1 = subargs[0]
 
       if not self.simulation.routerfail(n1):
          print("No node %s in current topology.")
-      
+
    def do_simpath(self, args):
       if not self.simulation.is_active():
          print("No simulation active, type 'simulation' to start one")
@@ -944,7 +944,7 @@ class MetricShell(Cmd):
       if not length and not paths:
          print("No valid path from %s to %s in model")
          return
-      
+
       print("Path from %s to %s:"\
             % (a, b))
       print("  * Cost: %d" % (length))
@@ -970,7 +970,7 @@ class MetricShell(Cmd):
       if len(paths) > 1:
          path = reduce(lambda x,y: x+y, paths)
          hops = "/".join([str(len(x)) for x in paths])
-      
+
       graphdata['nodegroups'] = self.simulation.get_node_groups(path=path)
       graphdata['edgegroups'] = self.simulation.get_edge_groups(path=paths)
       graphdata['labels'] = utils.short_names(G.nodes())
@@ -979,9 +979,9 @@ class MetricShell(Cmd):
       graphdata['pos'] = self.model.get_positions(G.nodes())
       graphdata['title'] = "Simulated path from %s to %s (cost: %d, %s hops)" \
                            % (a, b, length, hops)
-      
+
       self.gui.plot(G, graphdata, 0.7)
-      
+
    def do_diffpath(self, args):
       if not self.simulation.is_active():
          print("No simulation active, type 'simulation' to start one")
@@ -1000,7 +1000,7 @@ class MetricShell(Cmd):
                % (b))
 
       slength, spaths = self.simulation.path(a,b)
-      length, paths = self.model.path(a,b)      
+      length, paths = self.model.path(a,b)
 
       print("Path from %s to %s:"\
             % (a, b))
@@ -1023,7 +1023,7 @@ class MetricShell(Cmd):
       if len(paths) > 1:
          path = reduce(lambda x,y: x+y, paths)
          hops = "/".join([str(len(x)) for x in paths])
-      
+
       if len(spaths) > 1 or len(paths) > 1:
          print("  * %d vs %d paths total:" % (len(spaths), len(paths)))
          print()
@@ -1031,7 +1031,7 @@ class MetricShell(Cmd):
       print("  * Hops: %s vs %s" % (shops, hops))
 
       self.tw.initial_indent = ' '*5
-      self.tw.subsequent_indent = ' '*5      
+      self.tw.subsequent_indent = ' '*5
       for i in range(max(len(paths), len(spaths))):
 
          if i < len(spaths):
@@ -1051,9 +1051,9 @@ class MetricShell(Cmd):
          else:
             print("      NA")
          print()
-               
+
       graphdata = {}
-      
+
       self.gui.clear()
       G = self.simulation.graph
       H = self.model.G
@@ -1074,12 +1074,12 @@ class MetricShell(Cmd):
       graphdata['pos'] = pos
 
       self.gui.plot(H, graphdata, 0.7)
-      
+
    def do_listequal(self, args):
       model = self.model
       if self.simulation.is_active():
          model = self.simulation
-         
+
       nodes = model.get_nodes()
 
       equal = {}
@@ -1109,8 +1109,8 @@ class MetricShell(Cmd):
                appstr = " (%s)" % d[1]
             dststr.append("%s%s" % (d[0], appstr))
          print("  * %-15s -> %s" % (source, self.tw.fill(", ".join(dststr))))
-      return                        
-         
+      return
+
    def do_path(self, args):
       subargs = args.split()
       if not len(subargs) == 2:
@@ -1131,7 +1131,7 @@ class MetricShell(Cmd):
       if not length and not paths:
          print("No valid path from %s to %s in model")
          return
-      
+
       print("Path from %s to %s:"\
             % (a, b))
       print("  * Cost: %d" % (length))
@@ -1169,18 +1169,18 @@ class MetricShell(Cmd):
       graphdata['pos'] = self.model.get_positions(G.nodes())
       graphdata['title'] = "Path(s) from %s to %s (cost: %d, %s hops)" \
                            % (a, b, length, hops)
-      
+
       self.gui.plot(G, graphdata, 0.7)
 
    def do_sim(self, args):
       return self.do_simulation(args)
-      
+
    def do_help(self, args):
       if args:
          Cmd.do_help(self, args)
          return
       cmdlist = [x.ljust(12) for x in [x.replace('help_', '') for x in [x for x in dir(self) if x.startswith('help_')]]]
-      
+
       print("""
 The program allows you to view topology and metrics, and to
 simulate various changes to investigate their impact on the
@@ -1211,7 +1211,7 @@ Available commands:
       self.tw.subsequent_indent = ''
       print(self.tw.fill(cmdstring))
       print()
-      
+
    #
    # Completions
    #
@@ -1232,13 +1232,13 @@ Available commands:
 
    def complete_colors(self, text, line, begidx, endidx):
       return ['on', 'off']
-   
+
    def complete_simpath(self, text, line, begidx, endidx):
       return self.complete_path(text, line, begidx, endidx)
 
    def complete_diffpath(self, text, line, begidx, endidx):
       return self.complete_path(text, line, begidx, endidx)
-   
+
    def complete_metric(self, text, line, begidx, endidx):
       length = len(line.split())
       if length == 3 and not text:
@@ -1259,7 +1259,7 @@ Available commands:
    def complete_changes(self, text, line, begidx, endidx):
       length = len(line.split())
       return [x for x in ['as-commands', 'no-effects'] if x.startswith(text)] \
-            + self.complete_path(text, line, begidx, endidx)      
+            + self.complete_path(text, line, begidx, endidx)
 
    def complete_stats(self, text, line, begidx, endidx):
       return []
@@ -1269,7 +1269,7 @@ Available commands:
 
    def complete_simplot(self, text, line, begidx, endidx):
       return self.complete_plot(text, line, begidx, endidx)
-   
+
    def complete_info(self, text, line, begidx, endidx):
       return self.complete_path(text, line, begidx, endidx)
 
@@ -1280,8 +1280,8 @@ Available commands:
       elif length == 4:
          return [x for x in ['with-transit'] if x.startswith(text)]
       else:
-         return self.complete_path(text, line, begidx, endidx)   
-   
+         return self.complete_path(text, line, begidx, endidx)
+
    def complete_reroute(self, text, line, begidx, endidx):
       length = len(line.split())
       if length == 4 and not text:
@@ -1293,7 +1293,7 @@ Available commands:
 
    def complete_anycast(self, text, line, begidx, endidx):
       tokens = line.split()
-      length = len(tokens)      
+      length = len(tokens)
       if length == 1 and not text:
          return ['add ', 'remove ', 'clear']
       elif length == 2 and text:
@@ -1323,7 +1323,7 @@ Available commands:
             When set to off no ANSI colors will be used
             in the terminal output.
             """)
-   
+
    def help_path(self):
       print("""
             Usage: path A B
@@ -1377,9 +1377,9 @@ Available commands:
 
             Add or remove nodes as anycast nodes.
             When no argument is given list the current anycast
-            nodes and display a plot of anycast members.            
+            nodes and display a plot of anycast members.
             """)
-            
+
    def help_minimize(self):
       print("""
             Usage: minimize
@@ -1400,7 +1400,7 @@ Available commands:
             you don't have to restart the program
             to switch between them.
             """)
-      
+
    def help_reload(self):
       print("""
             Usage: reload
@@ -1408,7 +1408,7 @@ Available commands:
             Reload the topology and metrics from
             file, replacing base model.
             """)
-      
+
    def help_plot(self):
       print("""
             Usage: plot (with-load) (all-metrics)
@@ -1485,7 +1485,7 @@ Available commands:
             If number of paths is greater than two, the
             number of paths is printed after each destination.
             """)
-      
+
    def help_png(self):
       print("""
             Usage: png (filename)
@@ -1493,9 +1493,9 @@ Available commands:
             Save current topology to a PNG file.
             If a simulation is active, saves the
             simulated topology.
-            
+
             """)
-      
+
    def help_simplot(self):
       print("""
             Usage: simplot (with-load)
@@ -1542,7 +1542,7 @@ Available commands:
             is active this uses the data from
             the simulation.
             """)
-   
+
    def help_changes(self):
       print("""
             Usage: changes (as-commands|no-effects) (<source>)
@@ -1562,7 +1562,7 @@ Available commands:
 
    def help_sim(self):
       self.help_simulation()
-   
+
    def help_simulation(self):
       print("""
             Usage: simulation (start|stop)
@@ -1637,7 +1637,7 @@ Available commands:
             Simulate router failure by removing
             the node.
             """)
-      
+
    def help_undo(self):
       print("""
             Usage: undo <change #>
@@ -1669,7 +1669,7 @@ Available commands:
    # Private methods
    def _colormode(self, on):
       self.bt = lambda x: colored(x, attrs=['bold'])
-      self.pbt = lambda x: colored2(x, attrs=['bold'])      
+      self.pbt = lambda x: colored2(x, attrs=['bold'])
 
       if on:
          self.termcolor = True
@@ -1678,7 +1678,7 @@ Available commands:
          self.pblt = lambda x: colored2(x, 'magenta')
          self.pbblt = lambda x: colored3(x, 'magenta')
          self.pgrt = lambda x: colored2(x, 'cyan')
-         self.pbgrt = lambda x: colored3(x, 'cyan')         
+         self.pbgrt = lambda x: colored3(x, 'cyan')
       else:
          self.termcolor = False
          self.blt = lambda x: x
@@ -1686,5 +1686,5 @@ Available commands:
          self.pblt = lambda x: x
          self.pbblt = self.pbt
          self.pgrt = lambda x: x
-         self.pbgrt = self.pbt         
-   
+         self.pbgrt = self.pbt
+

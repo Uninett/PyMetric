@@ -4,7 +4,7 @@ import http.client
 def reciprocity(G):
     """Calculate reciprocity of graph, i.e. the ratio of the edges in
     one direction that have and edge going in the other direction."""
-    return sum([G.has_edge(e[1], e[0]) 
+    return sum([G.has_edge(e[1], e[0])
     for e in G.edges]) / float(G.number_of_edges())
 
 def short_names(names):
@@ -25,8 +25,8 @@ def edge_labels(edges, edgegroups=[], suppress_default=True):
    i = 0
 
    edgedone = {}
-   
-   for (u,v,w) in edges:      
+
+   for (u,v,w) in edges:
       for el, type in edgegroups:
          for (s,t,x) in el:
             if (u,v) == (s,t):
@@ -70,18 +70,18 @@ def cap2str(capacity):
         capacity = int(capacity)
     if not capacity in mapping: return "Unkown"
     return mapping[capacity]
-      
+
 def read_linkloads(G, host, url):
 
     conn = http.client.HTTPConnection(host)
     conn.request("GET", url)
     r1 = conn.getresponse()
     if r1.status != 200:
-        conn.close()        
+        conn.close()
         return {}
     data1 = r1.read()
     if not data1:
-        conn.close()        
+        conn.close()
         return {}
     conn.close()
 
@@ -165,6 +165,6 @@ def node_diff_in_out(G, loads, node, inverse=False, exclude_edges=[]):
 
    if inverse:
       return sum_in - sum_out
-       
+
    return sum_out - sum_in
 

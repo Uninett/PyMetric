@@ -31,7 +31,7 @@ class Model:
 
    def has_linkloads(self):
       return len(list(self.linkloads.keys())) > 0
-   
+
    def get_in_link_load(self, u,v):
       if not (u,v) in self.linkloads:
          return False
@@ -41,14 +41,14 @@ class Model:
       if not (u,v) in self.linkloads:
          return False
       return int(self.linkloads[(u,v)])
-   
+
    def get_betweenness(self, top=None):
       if not top:
          return self.betweenness
       bc = self.betweenness
       toplist = sorted(bc, key=lambda x: bc[x])
       toplist.reverse()
-      return toplist[:top]      
+      return toplist[:top]
 
    def get_edge_betweenness(self, top=None):
       Edge = namedtuple('Edge', ['x', 'y'])
@@ -93,7 +93,7 @@ class Model:
 
       if not transit_only and (G == self.G or G == self.graph) and (u,v) in self.paths_using_edge:
          return self.paths_using_edge[(u,v)]
-      
+
       candidates = set()
       retpaths = {}
       #print "      Finding candidates (%s secs)" % (time.time() - stime)
@@ -148,19 +148,19 @@ class Model:
       if use_cache and (u,v) in self.linkload_parts:
          #print "  Returning from cache (%s secs)" % (time.time() - stime)
          return self.linkload_parts[(u,v)]
-      
+
       #print "  Finding nodes_and_paths (%s, %s) (%s secs)" % (u,v,time.time()-stime)
       nodes, pathlist = self.nodes_and_paths_using_edge(u, v, G)
       #print "  Nodes: %s    --    Pathlist: %s" % (nodes, pathlist)
       #print "  Done. (%s secs)" % (time.time()-stime)
       partloads = {}
       counts = {}
-      
+
       for paths in list(pathlist.values()):
          numpaths = len(paths)
          pathloads = {}
          for path in paths:
-            #print "  Finding path_loads (%s, %s) (%s secs)" % (u,v,time.time()-stime)            
+            #print "  Finding path_loads (%s, %s) (%s secs)" % (u,v,time.time()-stime)
             edges = self.get_path_loads(u, v, path, numpaths, loads, G)
             for (s,t) in edges:
                if (s,t) not in pathloads:
@@ -168,7 +168,7 @@ class Model:
                else:
                   pathloads[(s,t)] += edges[(s,t)]
          partloads.update(pathloads)
-                  
+
 
       for (s,t) in partloads:
          try:
@@ -180,9 +180,9 @@ class Model:
       if use_cache:
          self.linkload_parts[(u,v)] = partloads
       return partloads
-                  
-         
-         
+
+
+
    def get_path_loads(self, u, v, path,
                       numpaths=1,
                       loads=None,
@@ -195,7 +195,7 @@ class Model:
       edges = list(zip(path, path[1:]))
       if path[0] == u:
          pass
-      elif path[-1] == v:         
+      elif path[-1] == v:
          edges.reverse()
       elif (u,v) not in edges:
          print("Invalid call:")
@@ -210,7 +210,7 @@ class Model:
          path1.append(v)
          path2.append(u)
          path2.append(v)
-         
+
          i += 1
          for node in path[i:]:
             path2.append(node)
@@ -242,7 +242,7 @@ class Model:
             if not 'out' in loadmatrix[s]:
                loadmatrix[s]['out'] = loadmatrix[s]['in'] * cr(G, loads,
                                                                s, t, True, False)
-         
+
                #print "Load(in) :", loadmatrix[s]['in']
                #print "Load(out):", loadmatrix[s]['out']
             loadmatrix[t] = {'in': loadmatrix[s]['out']}
@@ -289,12 +289,12 @@ class Model:
       retinfo['name'] = name
       retinfo['betweenness'] = "%.3f (%.2f%% of max, %.2f%% of avg)" \
                              % (bc[(u,v)], (bc[(u,v)]/max(bc.values()))*100,
-                                (bc[(u,v)]/(sum(bc.values())/len(bc)))*100)      
+                                (bc[(u,v)]/(sum(bc.values())/len(bc)))*100)
       retinfo['capacity'] = utils.cap2str(capacity)
       retinfo['load'] = load
       retinfo['utilization'] = utilization
 
-      return retinfo   
+      return retinfo
 
    def get_node_info(self, node):
       G = self.graph
@@ -306,7 +306,7 @@ class Model:
       retinfo['links'] = [x[2]['l'] + \
                                 " (" + str(int(x[2]['value'])) + ")" for x in G.edges(node, data=True)]
       retinfo['neighbors'] = list(G.neighbors(node))
-      retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])      
+      retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])
       retinfo['eccentricity'] = nx.eccentricity(G, node)
       retinfo['betweenness'] = "%.3f (%.2f%% of max, %.2f%% of avg)" \
                              % (bc[node], (bc[node]/max(bc.values()))*100,
@@ -340,10 +340,10 @@ class Model:
          retval.append("%s (%s)" % (" <-> ".join([u,v]), pc[(u,v)]))
          seen[(u,v)] = True
          if (v,u) in sp and pc[(u,v)] == pc[(v,u)]:
-            seen[(v,u)] = True         
+            seen[(v,u)] = True
 
       return retval
-   
+
    def get_node_groups(self, threshold=0.095, n=10, nodes=None, path=None):
       groups = {}
       bc = self.betweenness
@@ -407,11 +407,11 @@ class Model:
          if as_string:
             return utils.cap2str(slowest)
          return slowest
-         
-      return [self.get_link_capacity(u,v,as_string) for (u,v) in path_links]      
-   
+
+      return [self.get_link_capacity(u,v,as_string) for (u,v) in path_links]
+
    def get_link_capacity(self, u, v, as_string=False):
-                  
+
       if not self.graph.has_edge(u,v):
          return False
 
@@ -439,7 +439,7 @@ class Model:
       utils = {}
       for (u,v) in self.G.edges():
          utils[(u,v)] = self.get_link_utilization(u,v)
-         
+
       return utils
 
    def has_capacity_info(self):
@@ -447,7 +447,7 @@ class Model:
          if 'c' in self.graph[u][v]:
             return True
       return False
-   
+
    def get_edge_groups(self, threshold=0.020, n=20, edges=None, path=None):
       groups, mpath_edges, rpath_edges = {}, [], []
       multi = False
@@ -456,14 +456,14 @@ class Model:
          if type(path[0]) == type([]):
             if len(path) > 1: multi = True
             mpath = path[0]
-            
+
             for p in path[1:]:
                rpath_edges += list(zip(p, p[1:]))
                rpath_edges += list(zip(p[1:], p))
 
          mpath_edges = list(zip(mpath, mpath[1:]))
          mpath_edges += list(zip(mpath[1:], mpath))
-      
+
       ebc = self.edge_betweenness
       top = self.get_edge_betweenness(top=n)
 
@@ -488,7 +488,7 @@ class Model:
                if 'mainpath' not in groups:
                   groups['mainpath'] = [(u,v,d)]
                else:
-                  groups['mainpath'].append((u,v,d))                  
+                  groups['mainpath'].append((u,v,d))
             elif rpath_edges and (u,v) in rpath_edges:
                if 'mainaltpath' not in groups:
                   groups['mainaltpath'] = [(u,v,d)]
@@ -528,7 +528,7 @@ class Model:
                   groups['normal'].append((u,v,d))
 
       return [(groups[k], k) for k in groups]
-   
+
    def get_nodes(self):
       return self.G.nodes()
 
@@ -540,7 +540,7 @@ class Model:
             areas[n] = na[n]['area']
          else:
             areas[n] = None
-            
+
       return areas
 
    def get_positions(self, nodes):
@@ -549,7 +549,7 @@ class Model:
       for n in nodes:
          pos[n] = (float(na[n]['x']), float(na[n]['y']))
       return pos
-   
+
    def get_stats(self):
       top = self.get_betweenness(top=20)
       stats = {}
@@ -562,11 +562,11 @@ class Model:
       stats["density"] = nx.density(self.graph)
       stats["reciprocity"] = utils.reciprocity(self.graph)
       stats["mean length"] = nx.average_shortest_path_length(self.graph)
-      stats["longest paths"] = self.get_max_cost_paths()      
+      stats["longest paths"] = self.get_max_cost_paths()
       stats["top 20 transit"] = top
 
       return stats
-   
+
    def path(self, source, dest, G=None):
 
       if not G:
@@ -584,7 +584,7 @@ class Model:
             return
          path.append(dest)
          if len(preds[dest]) == 0:
-            paths.append(path)            
+            paths.append(path)
             return
          for newdest in preds[dest]:
             _get_paths(preds, path[:], paths, newdest)
@@ -673,13 +673,13 @@ class Model:
 
       return [paths[i] for i in range(len(paths)) if p_attr[i]['candidate']]
 
-            
+
 class Simulation:
 
    SC_METRIC      = 1
    SC_LINKFAIL    = 2
    SC_ROUTERFAIL  = 4
-   
+
    def __init__(self, model, debug=False):
       self.model = model
       self.graph = model.G.copy()
@@ -692,7 +692,7 @@ class Simulation:
       self.all_paths = {}
       self._refresh_all_paths()
       self.linkloads = self.model.linkloads
-      
+
    def get_stats(self):
       bc = self.betweenness
       top = sorted(bc, key=lambda x: bc[x])
@@ -720,7 +720,7 @@ class Simulation:
       utils = {}
       for (u,v) in self.graph.edges():
          utils[(u,v)] = self.get_link_utilization(u,v)
-         
+
       return utils
    def get_in_link_load(self, u,v):
       if not (u,v) in self.linkloads:
@@ -731,7 +731,7 @@ class Simulation:
       if not (u,v) in self.linkloads:
          return False
       return int(self.linkloads[(u,v)])
-   
+
    def get_node_info(self, node):
       G = self.graph
       if node not in G.nodes(): return {}
@@ -746,7 +746,7 @@ class Simulation:
       retinfo['eccentricity'] = nx.eccentricity(G, node)
       retinfo['betweenness'] = "%.3f (%.2f%% of max, %.2f%% of avg)" \
                              % (bc[node], (bc[node]/max(bc.values()))*100,
-                                (bc[node]/(sum(bc.values())/len(bc)))*100)      
+                                (bc[node]/(sum(bc.values())/len(bc)))*100)
       if self.acnodes:
          acstr = " and ".join(self.acgroups[node])
          retinfo['anycast group'] = acstr
@@ -777,7 +777,7 @@ class Simulation:
       retinfo['name'] = name
       retinfo['betweenness'] = "%.3f (%.2f%% of max, %.2f%% of avg)" \
                              % (bc[(u,v)], (bc[(u,v)]/max(bc.values()))*100,
-                                (bc[(u,v)]/(sum(bc.values())/len(bc)))*100)      
+                                (bc[(u,v)]/(sum(bc.values())/len(bc)))*100)
       retinfo['capacity'] = utils.cap2str(capacity)
       retinfo['load'] = load
       retinfo['utilization'] = utilization
@@ -813,10 +813,10 @@ class Simulation:
          retval.append("%s (%s)" % (" <-> ".join([u,v]), pc[(u,v)]))
          seen[(u,v)] = True
          if (v,u) in sp and pc[(u,v)] == pc[(v,u)]:
-            seen[(v,u)] = True         
+            seen[(v,u)] = True
 
       return retval
-   
+
    def start(self):
       self.active = True
       self.graph = self.model.G.copy()
@@ -835,7 +835,7 @@ class Simulation:
 
    def get_changes_strings(self, commands=False):
       strings = []
-      for change in self.changes:         
+      for change in self.changes:
          if change['type'] == Simulation.SC_METRIC:
             connector = "->"
             bidirstr = " one-way"
@@ -861,7 +861,7 @@ class Simulation:
             if commands:
                strings.append("routerfail %s"\
                      % (change['node']))
-               continue                                 
+               continue
             strings.append("Router failure of %s" \
                   % (change['node']))
       return strings
@@ -869,7 +869,7 @@ class Simulation:
    def uneven_metrics(self):
       G = self.graph
       return [x for x in G.edges() if G[x[0]][x[1]] != G[x[1]][x[0]]]
-   
+
    def has_changes(self):
       return len(self.changes) > 0
 
@@ -886,13 +886,13 @@ class Simulation:
    def get_effects_summary(self):
 
       dstsummary, srcsummary = {}, {}
-      
+
       for source in self.effects:
          no_changes = 0
 
          for dest in list(self.effects[source].keys()):
             ddiffs = self.effects[source][dest]
-            no_changes += len(ddiffs)            
+            no_changes += len(ddiffs)
             if dest in dstsummary:
                dstsummary[dest].append(source)
             else:
@@ -903,7 +903,7 @@ class Simulation:
                srcsummary[source] = [dest]
 
       return srcsummary, dstsummary
-      
+
    def get_nodes(self):
       return self.graph.nodes()
 
@@ -928,12 +928,12 @@ class Simulation:
 
    def get_anycast_groups_by_source(self):
       return self.acgroups
-   
+
    def get_anycast_group(self, node):
       if node not in self.acnodes:
          return None
       return [x for x in list(self.acgroups.keys()) if node in self.acgroups[x]]
-   
+
    def get_anycast_nodes(self):
       return list(self.acnodes)
 
@@ -945,7 +945,7 @@ class Simulation:
       for n in nodes:
          self.acnodes.discard(n)
       self._refresh_anycast()
-   
+
    def get_node_groups(self, threshold=0.095, n=10, path=None):
       groups = {}
       bc = self.betweenness
@@ -961,7 +961,7 @@ class Simulation:
                if not 'mainstop' in groups:
                   groups['mainstop'] = [node]
                else:
-                  groups['mainstop'].append(node)            
+                  groups['mainstop'].append(node)
             elif path and node in path:
                if not 'mainpath' in groups:
                   groups['mainpath'] = [node]
@@ -982,7 +982,7 @@ class Simulation:
                if not 'normalstop' in groups:
                   groups['normalstop'] = [node]
                else:
-                  groups['normalstop'].append(node)            
+                  groups['normalstop'].append(node)
             elif path and node in path:
                if not 'normalpath' in groups:
                   groups['normalpath'] = [node]
@@ -996,20 +996,20 @@ class Simulation:
 
       return [(groups[k], k) for k in groups]
 
-   def get_diff_edge_groups(self, path, spath, threshold=0.01, n=20):      
+   def get_diff_edge_groups(self, path, spath, threshold=0.01, n=20):
       groups = {}
 
       #print "get_diff_edge_groups called (%s, %s)" % (path, spath)
       smpath_edges, srpath_edges = [], []
       mpath_edges, rpath_edges = [], []
-      
+
       smpath = spath
       mpath = path
-      
+
       if type(spath[0]) == type([]):
          if len(spath) > 1: smulti = True
          smpath = spath[0]
-            
+
          for p in spath[1:]:
             srpath_edges += list(zip(p, p[1:]))
             srpath_edges += list(zip(p[1:], p))
@@ -1017,11 +1017,11 @@ class Simulation:
       if type(path[0]) == type([]):
          if len(path) > 1: multi = True
          mpath = path[0]
-            
+
          for p in path[1:]:
             rpath_edges += list(zip(p, p[1:]))
             rpath_edges += list(zip(p[1:], p))
-      
+
       mpath_edges = list(zip(mpath, mpath[1:]))
       mpath_edges += list(zip(mpath[1:], mpath))
       smpath_edges = list(zip(smpath, smpath[1:]))
@@ -1069,9 +1069,9 @@ class Simulation:
             if debug: print("In redges...ignoring")
             continue
          if (ebc[(u,v)] > threshold and ebc[(v,u)] > threshold) \
-                or (u,v) in top:            
+                or (u,v) in top:
             if debug: print("Is main edge")
-            
+
             if (u,v) in mupath_edges and (u,v) not in rupath_edges:
                if debug: print("Is mupath_edge")
                if 'mainupath' not in groups:
@@ -1210,7 +1210,7 @@ class Simulation:
 
       opath = list(set(path) - set(spath))
       upath = list(set(path).intersection(set(spath)))
-      
+
       rnodes = list(set(self.model.G.nodes()) - set(self.graph.nodes()))
 
       for node in self.graph.nodes():
@@ -1235,7 +1235,7 @@ class Simulation:
                if not 'mainpath' in groups:
                   groups['mainpath'] = [node]
                else:
-                  groups['mainpath'].append(node)               
+                  groups['mainpath'].append(node)
             elif node in opath:
                if not 'mainopath' in groups:
                   groups['mainopath'] = [node]
@@ -1256,7 +1256,7 @@ class Simulation:
                if not 'normalstop' in groups:
                   groups['normalstop'] = [node]
                else:
-                  groups['normalstop'].append(node)            
+                  groups['normalstop'].append(node)
             elif node in upath:
                if not 'normalupath' in groups:
                   groups['normalupath'] = [node]
@@ -1266,7 +1266,7 @@ class Simulation:
                if not 'normalpath' in groups:
                   groups['normalpath'] = [node]
                else:
-                  groups['normalpath'].append(node)               
+                  groups['normalpath'].append(node)
             elif node in opath:
                if not 'normalopath' in groups:
                   groups['normalopath'] = [node]
@@ -1291,7 +1291,7 @@ class Simulation:
                groups['normalopath'] += nodes
             else:
                groups['normalopath'] = nodes
-      
+
       return [(groups[k], k) for k in groups]
 
    def get_edge_groups(self, threshold=0.01, n=20, path=None):
@@ -1302,14 +1302,14 @@ class Simulation:
          if type(path[0]) == type([]):
             if len(path) > 1: multi = True
             mpath = path[0]
-            
+
             for p in path[1:]:
                rpath_edges += list(zip(p, p[1:]))
                rpath_edges += list(zip(p[1:], p))
 
          mpath_edges = list(zip(mpath, mpath[1:]))
          mpath_edges += list(zip(mpath[1:], mpath))
-      
+
       ebc = self.edge_betweenness
       top = self.get_edge_betweenness(top=n)
 
@@ -1331,12 +1331,12 @@ class Simulation:
                if 'mainpath' not in groups:
                   groups['mainpath'] = [(u,v,d)]
                else:
-                  groups['mainpath'].append((u,v,d))                  
+                  groups['mainpath'].append((u,v,d))
             elif rpath_edges and (u,v) in rpath_edges:
                if 'mainaltpath' not in groups:
                   groups['mainaltpath'] = [(u,v,d)]
                else:
-                  groups['mainaltpath'].append((u,v,d))                  
+                  groups['mainaltpath'].append((u,v,d))
             else:
                if 'main' not in groups:
                   groups['main'] = [(u,v,d)]
@@ -1371,7 +1371,7 @@ class Simulation:
                   groups['normal'].append((u,v,d))
 
       return [(groups[k], k) for k in groups]
-   
+
    def has_effects(self):
       return len(self.effects) > 0
 
@@ -1384,14 +1384,14 @@ class Simulation:
       if record:
          self.changes.append({'type': Simulation.SC_LINKFAIL, 'pair': (n1,n2),
                                       'metrics': metrics})
-      
+
       self.graph.remove_edge(n1, n2)
       self.graph.remove_edge(n2, n1)
-      
+
       self._refresh_betweenness()
       self._refresh_anycast()
       self.effects = self._refresh_effects()
-      self._refresh_linkload()      
+      self._refresh_linkload()
 
       return True
 
@@ -1405,7 +1405,7 @@ class Simulation:
          self.graph.remove_edge(n1, node)
          removed_edges.append((node, n1, self.graph[node][n1]))
          self.graph.remove_edge(node, n1)
-         
+
       self.graph.remove_node(n1)
 
       if record:
@@ -1415,7 +1415,7 @@ class Simulation:
       self._refresh_betweenness()
       self._refresh_anycast()
       self.effects = self._refresh_effects()
-      self._refresh_linkload()      
+      self._refresh_linkload()
 
       return True
 
@@ -1433,7 +1433,7 @@ class Simulation:
 
       if bidir == False:
          bidirectional = False
-         
+
       if not record:
          bidirectional = False
       self.graph.remove_edge(n1, n2)
@@ -1452,7 +1452,7 @@ class Simulation:
       self._refresh_anycast()
       self.effects = self._refresh_effects()
       self._refresh_linkload()
-      
+
       return True
 
    def path(self, source, dest, G=None):
@@ -1471,7 +1471,7 @@ class Simulation:
             return
          path.append(dest)
          if len(preds[dest]) == 0:
-            paths.append(path)            
+            paths.append(path)
             return
          for newdest in preds[dest]:
             _get_paths(preds, path[:], paths, newdest)
@@ -1481,7 +1481,7 @@ class Simulation:
       for path in paths:
          path.reverse()
       return costs[dest], paths
-      
+
    def undo(self, change_no):
       if change_no > len(self.changes) or change_no < 1:
          return False
@@ -1516,9 +1516,9 @@ class Simulation:
       self._refresh_betweenness()
       self._refresh_anycast()
       self.effects = self._refresh_effects()
-      self._refresh_linkload()      
+      self._refresh_linkload()
       return True
-      
+
    def is_active(self):
       return self.active
 
@@ -1527,7 +1527,7 @@ class Simulation:
       debug = False
 
       max_metric = self.model.config.get('max_metric')
-      
+
       G = self.graph
       H = self.graph.copy()
       I = self.graph.copy()
@@ -1538,7 +1538,7 @@ class Simulation:
       target_no_paths = [1]
       if equal:
          target_no_paths = list(range(2,10)) + [1]
-      
+
       ocost, opaths = self.path(start, stop)
       cost1, paths1 = self.path(start, via)
 
@@ -1577,11 +1577,11 @@ class Simulation:
       if debug: print("V: %s" % (V))
 
       if debug: print("Allowed nodes: %s" % (allowed_nodes))
-      
+
       finished = False
       neighbor_inc = 1
       start_t = time.time()
-      
+
       while not finished:
 
          if time.time() - start_t >= timeout:
@@ -1589,7 +1589,7 @@ class Simulation:
             success = False
             print("Timed out!")
             return (success, results)
-         
+
          ocost, opaths = self.path(start, stop, K)
          W = set(reduce(lambda x,y: x+y, opaths))
          cost1, paths1 = self.path(start, via, I)
@@ -1603,7 +1603,7 @@ class Simulation:
             finished = True
             success = True
             continue
-         
+
          nochange = True
 
          if debug: print("Negative adjustment loop")
@@ -1641,7 +1641,7 @@ class Simulation:
 
                      if not bad_effect:
                         ocost, opaths = self.path(start, stop, K)
-                        W = set(reduce(lambda x,y: x+y, opaths))                  
+                        W = set(reduce(lambda x,y: x+y, opaths))
                         cost1, paths1 = self.path(start, via, I)
                         if debug: print("Opath now: %s" % opaths)
                         if debug: print("Comparing %s+%s to %s" % (cost2, cost1, ocost))
@@ -1674,7 +1674,7 @@ class Simulation:
                            #print dest
                            if dest not in allowed_nodes:
                               bad_effect = True
-                              
+
                if bad_effect == True:
                   I.add_edge(u,v,weight=w+1)
                   K.add_edge(u,v,weight=w+1)
@@ -1686,7 +1686,7 @@ class Simulation:
                   nochange = False
 
          ocost, opaths = self.path(start, stop, K)
-         W = set(reduce(lambda x,y: x+y, opaths))                  
+         W = set(reduce(lambda x,y: x+y, opaths))
          cost1, paths1 = self.path(start, via, I)
          if debug: print("Opath now: %s" % opaths)
          if debug: print("Comparing %s+%s to %s" % (cost2, cost1, ocost))
@@ -1695,7 +1695,7 @@ class Simulation:
             finished = True
             success = True
             continue
-         
+
          if debug: print("Positive adjustment loop")
          for opath in opaths:
             for (u,v) in zip(opath, opath[1:]):
@@ -1733,7 +1733,7 @@ class Simulation:
 
                      if not bad_effect:
                         ocost, opaths = self.path(start, stop, K)
-                        W = set(reduce(lambda x,y: x+y, opaths))                  
+                        W = set(reduce(lambda x,y: x+y, opaths))
                         cost1, paths1 = self.path(start, via, I)
                         if debug: print("Opath now: %s" % opaths)
                         if debug: print("Comparing %s+%s to %s" % (cost2, cost1, ocost))
@@ -1775,7 +1775,7 @@ class Simulation:
                   if debug: print("B: nochange = False")
                   nochange = False
          ocost, opaths = self.path(start, stop, K)
-         W = set(reduce(lambda x,y: x+y, opaths))                  
+         W = set(reduce(lambda x,y: x+y, opaths))
          cost1, paths1 = self.path(start, via, I)
          if debug: print("Opath now: %s" % opaths)
 
@@ -1795,7 +1795,7 @@ class Simulation:
 
                if w < 1:
                   if debug: print("Reached minimum metric...")
-                  continue                  
+                  continue
                J.add_edge(u,v,weight=w)
                K.add_edge(u,v,weight=w)
 
@@ -1850,10 +1850,10 @@ class Simulation:
       #      results[(v,u)] = w
 
       return (success, results)
-         
-         
 
-            
+
+
+
    def minimal_link_costs(self):
       debug = False
 
@@ -1901,7 +1901,7 @@ class Simulation:
 
          if not adjustment_found:
             finished = True
-            
+
       return H
 
    def _refresh_betweenness(self):
@@ -1915,15 +1915,15 @@ class Simulation:
    def _refresh_effects(self, OG=None, NG=None):
 
       self._refresh_all_paths()
-      
+
       if not OG:
          OG = self.model.G
       if not NG:
          NG = self.graph
-         
+
       diff_paths = {}
       sources = OG.nodes()
-      
+
       for source in sources:
          diff_by_dst = {}
          if not source in NG: continue
@@ -1938,7 +1938,7 @@ class Simulation:
             if not dest in npreds:
                diff_by_dst[dest] = [{'old': opreds[dest], 'new': []}]
                continue
-               
+
             diff_res = self._path_cmp(opreds[dest], npreds[dest])
             if diff_res:
                if dest in diff_by_dst:
@@ -1961,7 +1961,7 @@ class Simulation:
 
       accosts = {}
       acgroups = {}
-      
+
       for source in self.graph.nodes():
 
          if source in self.acnodes:
@@ -1996,7 +1996,7 @@ class Simulation:
       traverse_edges = []
       old_path_parts = {}
       old_paths = {}
-      
+
       for node in effects:
          for dest in effects[node]:
 
@@ -2014,7 +2014,7 @@ class Simulation:
 
       #print "Viapaths found (%s secs)" % (time.time() - stime)
       for (vianode, dest) in traverse_edges:
-         old_paths = self.model.nodes_and_paths_using_edge(vianode,dest)[1]            
+         old_paths = self.model.nodes_and_paths_using_edge(vianode,dest)[1]
          # reduce_old(node, dest)
          loads = self.model.linkloads
          G = self.model.graph
@@ -2039,7 +2039,7 @@ class Simulation:
                         no_new_paths = len(effects[u][dest][0]['new'])
                         no_old_paths = len(effects[u][dest][0]['old'])
                         deduct = 0
-                        
+
                         for npath in new_paths:
                            edges = list(zip(npath, npath[1:]))
                            if (v,u) in edges:
@@ -2081,7 +2081,7 @@ class Simulation:
       #print "Negative adjustments complete (%s secs)" % (time.time() - stime)
       pos_changes = {}
       for (vianode, dest) in traverse_edges:
-         old_paths = self.model.nodes_and_paths_using_edge(vianode,dest)[1]            
+         old_paths = self.model.nodes_and_paths_using_edge(vianode,dest)[1]
          for (n1, n2) in old_paths:
             if not (n1 in self.graph and n2 in self.graph): continue
             if not (n2 == dest or n1 == vianode): continue
@@ -2092,7 +2092,7 @@ class Simulation:
             opaths = old_paths[(n1,n2)]
             ofirst_edges = []
             for opath in opaths:
-               if n2 == dest: 
+               if n2 == dest:
                   ofirst_edges.append((opath[0], opath[1]))
                else:
                   ofirst_edges.append((opath[-2], opath[-1]))
@@ -2133,8 +2133,8 @@ class Simulation:
 
       #print "Returning adjustments (%s secs)" % (time.time() - stime)
       return adjustments
-      
-         
+
+
    def _refresh_linkload(self):
 
       self.linkloads = self.model.linkloads.copy()

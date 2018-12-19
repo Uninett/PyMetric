@@ -34,7 +34,7 @@ class PlotUI:
                  'normalstop'  : '#dd7777',
                  'normalpath'  : '#77aaff',
                  'normalopath' : '#cccc99',
-                 'normalupath' : '#4477cc'}   
+                 'normalupath' : '#4477cc'}
 
    edgewidths = {'main'          : 4,
                  'mainpath'      : 5,
@@ -42,7 +42,7 @@ class PlotUI:
                  'mainopath'     : 4,
                  'mainupath'     : 5,
                  'mainoaltpath'  : 4,
-                 'mainualtpath'  : 5,                 
+                 'mainualtpath'  : 5,
                  'normal'        : 1,
                  'normalpath'    : 2.5,
                  'normalaltpath' : 2.5,
@@ -58,22 +58,22 @@ class PlotUI:
                    100000        : 1.5,
                     34010        : 1.0,
                     34000        : 1.9,
-                     1984        : 0.75}   
+                     1984        : 0.75}
 
    edgecolors = {'main'           : '#bbbbbb',
                  'mainpath'       : '#77aaff',
-                 'mainaltpath'    : '#77aaff',                 
+                 'mainaltpath'    : '#77aaff',
                  'mainopath'      : '#aaaa77',
                  'mainupath'      : '#4477cc',
                  'mainoaltpath'   : '#aaaa77',
-                 'mainualtpath'   : '#2255aa',                 
+                 'mainualtpath'   : '#2255aa',
                  'normal'         : '#dddddd',
                  'normalpath'     : '#77aaff',
-                 'normalaltpath'  : '#77aaff',                 
+                 'normalaltpath'  : '#77aaff',
                  'normalopath'    : '#aaaa77',
                  'normalupath'    : '#4477cc',
                  'normaloaltpath' : '#bbbb88',
-                 'normalualtpath' : '#2255aa'}   
+                 'normalualtpath' : '#2255aa'}
 
    edgestyles = {'main'           : 'solid',
                  'mainpath'       : 'solid',
@@ -81,14 +81,14 @@ class PlotUI:
                  'mainopath'      : 'solid',
                  'mainupath'      : 'solid',
                  'mainoaltpath'   : 'dotted',
-                 'mainualtpath'   : 'dotted',                 
+                 'mainualtpath'   : 'dotted',
                  'normal'         : 'solid',
                  'normalpath'     : 'solid',
                  'normalaltpath'  : 'dotted',
                  'normalopath'    : 'solid',
                  'normalupath'    : 'solid',
                  'normaloaltpath' : 'dotted',
-                 'normalualtpath' : 'dotted'}      
+                 'normalualtpath' : 'dotted'}
 
 
    areacolors = [(0.65,0.5,0,1), (0.5,0.75,0.35,1), (0.28,0.8,0.68,1),
@@ -98,7 +98,7 @@ class PlotUI:
                  (0.3,0.4,0.8,1), (0.1,0.9,0.85,1), (0.35,0.83,0.68,1),
                  (0.3,0.83,0.69,1), (0.95,0.95,0.8,1), (0.14,0.78,0.87,1),
                  (0.74,0.23,0.95,1)]
-   
+
    def __init__(self, command):
 
       self.has_plotted = False
@@ -116,7 +116,7 @@ class PlotUI:
       if not self.command: return
 
       if not event.artist in self.plottednodes: return
-      
+
       nodes = self.plottednodes[event.artist]
 
       for i in event.ind:
@@ -154,7 +154,7 @@ class PlotUI:
          if edge_cmap:
             nodecolors = '#444488'
             nodealpha = 0.9
-         
+
          if areagroups:
 
             areas = [data['areagroups'][nodes[i]] for i in range(len(nodes))]
@@ -166,7 +166,7 @@ class PlotUI:
                      ci += 1
                   else:
                      PlotUI.nodecolors[a] = random.choice(PlotUI.areacolors)
-                  
+
             nodecolors = [PlotUI.nodecolors[data['areagroups'][nodes[i]]]
                           for i in range(len(nodes))]
 
@@ -211,12 +211,12 @@ class PlotUI:
       for (edges, type) in data['edgegroups']:
 
          edgecolors = PlotUI.edgecolors[type]
-         
+
          #print "colors:", edgecolors
 
          if nx.__version__ > "0.36":
             edgecolors = [PlotUI.edgecolors[type]] * len(edges)
-            
+
          ealpha = self._get_alpha(type, opacity)
          if anycast:
             ealpha = 0.5
@@ -270,7 +270,7 @@ class PlotUI:
                                 style=PlotUI.edgestyles[type],
                                 alpha=ealpha,
                                 arrows=False,
-                                hold=True)            
+                                hold=True)
 
       if 'labels' in data:
          color = 'k'
@@ -278,26 +278,26 @@ class PlotUI:
          if edge_cmap:
             color = '#bbbbbb'
             fsize = 8.5
-         
+
          self.nlabelc = nx.draw_networkx_labels(graph, pos=data['pos'],
                                  labels=data['labels'],
                                  font_size=fsize,
                                  font_color=color,
                                  alpha=1,
                                  hold=True)
-      
+
       if 'edgelabels' in data and not edge_cmap:
          self.elabelc = self._plot_edge_labels(graph,
                                                data['edgelabels'],
                                                pos=data['pos'])
-      plt.axis("off")      
+      plt.axis("off")
       plt.subplots_adjust(0,0,1,1)
       ax.set_xbound(-10, 210)
       ax.set_ybound(0, 200)
       plt.xlim(-10, 210)
       plt.ylim(0,200)
 
-      
+
       f = plt.gcf()
       if not edge_cmap:
          f.set_facecolor('w')
@@ -306,20 +306,20 @@ class PlotUI:
                            fraction=0.10, pad=0)
          for t in cb.ax.get_yticklabels():
             t.set_color('#bbbbbb')
-         
-         cb.set_label("Link utilization", color='#bbbbbb')         
-      fm = plt.get_current_fig_manager()      
+
+         cb.set_label("Link utilization", color='#bbbbbb')
+      fm = plt.get_current_fig_manager()
 
       if (not self.has_plotted) and interactive:
-         f.set_figheight(13)         
+         f.set_figheight(13)
          f.set_size_inches(8,13)
          if matplotlib.get_backend() == 'TkAgg':
             maxh = fm.window.winfo_screenheight() - 60
-            fm.window.minsize(600,maxh)         
+            fm.window.minsize(600,maxh)
       if interactive:
          fm.set_window_title("PyMetric - " + data['title'])
          f.canvas.mpl_connect('pick_event', self.picktest)
-      plt.draw()         
+      plt.draw()
       self.has_plotted = True
 
    def _get_alpha(self, type, opacity):
@@ -329,7 +329,7 @@ class PlotUI:
          return opacity
       else:
          return 1
-         
+
    def _plot_edge_labels(self, G, edgelabels, pos):
       from math import sqrt
 
@@ -338,10 +338,10 @@ class PlotUI:
 
          (x1, y1) = pos[u]
          (x2, y2) = pos[v]
-         
+
          x_diff = (x2 - x1)
          y_diff = (y2 - y1)
-         
+
          d = sqrt( x_diff**2 + y_diff**2 )
 
          x = (x1+x2) / 2
@@ -364,7 +364,7 @@ class PlotUI:
                   wx = -10
                else:
                   wx = 10
-                  
+
             if x_diff == 0:
                y = y1 + wy
             elif y_diff == 0:
@@ -373,14 +373,14 @@ class PlotUI:
                x = x1 + wx
                y = y1 + wy
 
-            
+
 
 
          lpos.append((x,y))
-         
+
       ax = plt.gca()
       text_items = {}
-         
+
       for (i, label, bold) in edgelabels:
          label = str(label)
          (x,y) = lpos[i]
