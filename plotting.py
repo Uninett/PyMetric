@@ -248,7 +248,7 @@ class PlotUI:
                edgewidths = [PlotUI.edgewidths[edge_capa[(edges[i][0], edges[i][1])]]
                              for i in range(len(edges))]
             except KeyError:
-               print "Error: Unknown or missing capacity information provided to plot command"
+               print("Error: Unknown or missing capacity information provided to plot command")
                return
 
             self.edgec = nx.draw_networkx_edges(graph, pos=data['pos'],

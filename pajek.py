@@ -37,7 +37,7 @@ def parse_pajek(lines):
     directed=True # assume this is a directed network for now
     while lines:
         try:
-            l=lines.next()
+            l=next(lines)
             l=l.lower()
         except: #EOF
             break
@@ -51,11 +51,11 @@ def parse_pajek(lines):
             l,nnodes=l.split()
             while not l.startswith("*arcs"):
                 if l.startswith('#'):
-                    l = lines.next()
+                    l = next(lines)
                     l = l.lower()
                     continue
                 if l.startswith('*'):
-                    l = lines.next()
+                    l = next(lines)
                     l = l.lower()
                     continue
                 splitline=shlex.split(l)
@@ -67,10 +67,10 @@ def parse_pajek(lines):
                 if len(splitline) > 2:
                     id,label,x,y=splitline[0:4]                
                     G.node_attr[label]={'id':id,'x':x,'y':y}
-                extra_attr=zip(splitline[4::2],splitline[5::2])
+                extra_attr=list(zip(splitline[4::2],splitline[5::2]))
                 #print extra_attr
                 G.node_attr[label].update(extra_attr)
-                l = lines.next()
+                l = next(lines)
                 l = l.lower()
         if l.startswith("*arcs"):
             for l in lines:
@@ -81,7 +81,7 @@ def parse_pajek(lines):
                 u=nodelabels.get(ui,ui)
                 v=nodelabels.get(vi,vi)
                 edge_data={'value':float(w)}
-                extra_attr=zip(splitline[3::2],splitline[4::2])
+                extra_attr=list(zip(splitline[3::2],splitline[4::2]))
                 edge_data.update(extra_attr)
                 if G.has_edge(u,v):
                     if G[u][v]['value'] > float(w):

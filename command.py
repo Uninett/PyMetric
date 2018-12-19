@@ -10,6 +10,7 @@ from plotting import PlotUI
 from textwrap import TextWrapper
 from termcolor import colored, colored2, colored3
 import utils
+from functools import reduce
 
 class MetricShell(Cmd):
 
@@ -40,8 +41,8 @@ class MetricShell(Cmd):
       self.debug = debug
       self.has_plotted = False
       self.filename = filename
-      print
-      print "Initializing model...."
+      print()
+      print("Initializing model....")
       if not model:
          self.model = Model(nx.Graph(), self.config)
          self.model.refresh_from_file(self.filename)
@@ -79,10 +80,8 @@ class MetricShell(Cmd):
          promptstring = "(sim) "
          if self.simulation.has_changes():
             effects = self.simulation.get_effects()
-            multinodes = filter(lambda x: len(effects[x].keys()) >= 5,
-                                effects.keys())
-            multimulti = filter(lambda x: len(effects[x].keys()) >= 20,
-                                effects.keys())                               
+            multinodes = [x for x in list(effects.keys()) if len(list(effects[x].keys())) >= 5]
+            multimulti = [x for x in list(effects.keys()) if len(list(effects[x].keys())) >= 20]
             difflen = nx.average_shortest_path_length(self.simulation.graph)\
                     - nx.average_shortest_path_length(self.model.G)
 
@@ -124,7 +123,7 @@ class MetricShell(Cmd):
             promptstring += "(" \
                          + self.pbblt("%dc" % self.simulation.no_changes()) \
                          + "/" \
-                         + self.pblt("%d:" % len(effects.keys())) \
+                         + self.pblt("%d:" % len(list(effects.keys()))) \
                          + self.pblt("%d:" % len(multinodes)) \
                          + self.pblt("%dn" % len(multimulti))
             if uzs:
@@ -147,11 +146,11 @@ class MetricShell(Cmd):
             if len(components) > 1:
                promptstring += "/"
                promptstring += self.prt("%d:%dp" % (len(components), cnodes))
-               print self.bt("Warning:") + " Network is partitioned"
+               print(self.bt("Warning:") + " Network is partitioned")
             promptstring += ") "
 
             if drop_warning:
-               print self.bt("Warning:") + " There are traffic drops"
+               print(self.bt("Warning:") + " There are traffic drops")
 
          acnodes = self.simulation.get_anycast_nodes()
 
@@ -179,9 +178,9 @@ class MetricShell(Cmd):
    #
    def do_version(self, args):
       if self.version:
-         print "PyMetric %s" % self.version
+         print("PyMetric %s" % self.version)
       else:
-         print "Unknown version"
+         print("Unknown version")
       return
    
    def do_colors(self, args):
@@ -192,18 +191,18 @@ class MetricShell(Cmd):
          elif args == 'off':
             color = False
          else:
-            print "Unknown argument:", args
+            print("Unknown argument:", args)
             return
       else:
-         print "Colormode is currently %s" % self.termcolor
+         print("Colormode is currently %s" % self.termcolor)
          return
       self._colormode(color)
-      print "Colormode is now %s" % self.termcolor
+      print("Colormode is now %s" % self.termcolor)
       return
          
    def do_reload(self, args):
       if self.simulation.is_active():
-         print "Please end simulation before reload."
+         print("Please end simulation before reload.")
          return
       self.model.refresh_from_file(self.filename)
       
@@ -213,39 +212,39 @@ class MetricShell(Cmd):
 
    def do_linkloads(self, args):
       if not self.config.get('use_linkloads'):
-         print "Link loads are not enabled"
+         print("Link loads are not enabled")
          return
       if self.model.refresh_linkloads():
-         print "OK, loads refreshed, use 'plot with-load' to plot"
+         print("OK, loads refreshed, use 'plot with-load' to plot")
          if not self.simulation.linkloads:
             self.simulation.linkloads = self.model.linkloads
             if self.simulation.has_changes():
                self.simulation._refresh_linkload()
          return
-      print "Couldn't refresh load data"
+      print("Couldn't refresh load data")
       return
       
    def do_load(self, args):
       if self.simulation.is_active():
-         print "Please end simulation before loading new file."
+         print("Please end simulation before loading new file.")
          return
       if not args:
-         print "Must specify filename to load model from."
+         print("Must specify filename to load model from.")
          return
-      confirm = raw_input('Are you sure you want to load new model [Y/N]? ')
+      confirm = input('Are you sure you want to load new model [Y/N]? ')
       if not confirm.lower() == 'y':
          return
       try:
          self.model.refresh_from_file(args)
          self.filename = args
       except IOError:
-         print "ERROR: Could not read file, does it exist?"
+         print("ERROR: Could not read file, does it exist?")
          self.model.refresh_from_file(self.filename)         
       except:
          import traceback         
          traceback.print_exc()
-         print
-         print "ERROR: Load failed, model not changed."         
+         print()
+         print("ERROR: Load failed, model not changed.")
          self.model.refresh_from_file(self.filename)
       return         
 
@@ -256,32 +255,32 @@ class MetricShell(Cmd):
          model = self.model
 
       if not self.model.has_linkloads():
-         print "No link load information available. Use 'linkloads' to fetch."
+         print("No link load information available. Use 'linkloads' to fetch.")
          return
 
       utils = model.get_link_utilizations()
 
       sorted_utils = sorted(utils,
-                          cmp=lambda x, y: cmp(utils[x], utils[y]))
+                           key=lambda x: utils[x])
       sorted_utils.reverse()
 
-      ab75_utils = filter(lambda x: utils[x] >= 0.75, sorted_utils)
+      ab75_utils = [x for x in sorted_utils if utils[x] >= 0.75]
 
-      print "Utilizations, type 'linkinfo source dest' for more details"
-      print
+      print("Utilizations, type 'linkinfo source dest' for more details")
+      print()
       if ab75_utils:
-         print ">75% utilization:"
+         print(">75% utilization:")
          for (u,v) in ab75_utils:
-            print "  * %s->%s: %.2f%%" % (u,v, utils[(u,v)]*100)
-         print
-      print "Top 10:"
+            print("  * %s->%s: %.2f%%" % (u,v, utils[(u,v)]*100))
+         print()
+      print("Top 10:")
       for (u,v) in sorted_utils[:10]:
-         print "  * %s->%s: %.2f%%" % (u,v, utils[(u,v)]*100)
-      print
+         print("  * %s->%s: %.2f%%" % (u,v, utils[(u,v)]*100))
+      print()
       
    def do_list(self, args):
-      print "List of nodes:"
-      print sorted(self.model.get_nodes())
+      print("List of nodes:")
+      print(sorted(self.model.get_nodes()))
 
    def do_asymmetric(self, args):
       model = self.model
@@ -292,19 +291,19 @@ class MetricShell(Cmd):
       uneven = model.uneven_metrics()
       printed = {}
       if not uneven:
-         print "All link metrics are symmetric"
+         print("All link metrics are symmetric")
          return
-      print "Links with asymmetric metrics (%d):" \
-            % (len(uneven)/2)
-      print
+      print("Links with asymmetric metrics (%d):" \
+            % (len(uneven)/2))
+      print()
       for (u,v,w) in uneven:
          w = w['weight']
          x = G[v][u]['weight']
          if (v,u) in printed: continue
-         print "%-15s -> %s: %s" % (u,v,w)
-         print "%-15s -> %s: %s" % (v,u,x)
+         print("%-15s -> %s: %s" % (u,v,w))
+         print("%-15s -> %s: %s" % (v,u,x))
          printed[(u,v)] = True
-         print
+         print()
       return
 
    def do_eval(self, args):
@@ -317,17 +316,17 @@ class MetricShell(Cmd):
          exec(evalstr)
       except:
          import traceback
-         print "An error occured:"
+         print("An error occured:")
          traceback.print_exc()
          return
 
-      print retstr
+      print(retstr)
 
       return
 
    def do_simplot(self, args):
       if not self.simulation.is_active():
-         print "No simulation is active, type 'simulation start' to start one"
+         print("No simulation is active, type 'simulation start' to start one")
          return
 
       suppress_default_metric = True
@@ -342,7 +341,7 @@ class MetricShell(Cmd):
                cmap[(u,v)] = self.simulation.get_link_utilization(u,v)
                capa[(u,v)] = self.model.get_link_capacity(u,v)            
          else:
-            print "Warning: No linkloads are defined. Use 'linkloads' to update."
+            print("Warning: No linkloads are defined. Use 'linkloads' to update.")
       elif self.simulation.get_anycast_nodes():
          self.do_anycast("")
          return
@@ -403,7 +402,7 @@ class MetricShell(Cmd):
                cmap[(u,v)] = self.model.get_link_utilization(u,v)
                capa[(u,v)] = self.model.get_link_capacity(u,v)            
          else:
-            print "Warning: No linkloads are defined. Use 'linkloads' to update."
+            print("Warning: No linkloads are defined. Use 'linkloads' to update.")
       
       if 'all-metrics' in subargs:
          suppress_default_metric = False
@@ -425,13 +424,13 @@ class MetricShell(Cmd):
 
    def do_areaplot(self, args):
       if not self.config.get('use_areas'):
-         print "IS-IS areas are not enabled"
+         print("IS-IS areas are not enabled")
          return
 
       G = self.model.G
       areas = self.model.get_areas(G.nodes())
       if not areas:
-         print "No IS-IS areas known"
+         print("No IS-IS areas known")
          return
 
       self.gui.clear()
@@ -462,7 +461,7 @@ class MetricShell(Cmd):
             value = ", ".join(value)
          value = str(value)
 
-         print "%s: %s" % (name.rjust(16), self.tw.fill(value))
+         print("%s: %s" % (name.rjust(16), self.tw.fill(value)))
 
       self.tw.width=80
 
@@ -474,13 +473,13 @@ class MetricShell(Cmd):
       transit_info = False
       subargs = args.split()
       if not len(subargs) >= 2:
-         print "Must specify two nodes"
+         print("Must specify two nodes")
          return
          self.help_linkinfo()
 
       (u,v) = subargs[:2]
       if not model.graph.has_edge(u,v):
-         print "Model has no link (%s,%s)" % (u,v)
+         print("Model has no link (%s,%s)" % (u,v))
          return
 
       if len(subargs) == 3:
@@ -490,7 +489,7 @@ class MetricShell(Cmd):
       self.tw.initial_indent = ''
       self.tw.subsequent_indent = ' '*17
       self.tw.width = 80 - 17         
-      print "Information for link (%s,%s):" % (u,v)
+      print("Information for link (%s,%s):" % (u,v))
       infohash = model.get_link_info(u,v)
       for key in ['name', 'betweenness', 
                   'capacity', 'load', 'utilization']:
@@ -500,17 +499,17 @@ class MetricShell(Cmd):
          if type(info) == type([]):
             info = ', '.join(info)
          info = str(info)
-         print "%-15s: %s" % (key, self.tw.fill(info))
-      print
+         print("%-15s: %s" % (key, self.tw.fill(info)))
+      print()
 
       if transit_info:
           transitinfo = model.get_transit_links(u,v)
           if not transitinfo:
-             print "No paths are using this link as a transit link."
+             print("No paths are using this link as a transit link.")
              self.tw.width = 80
              return
           transit_by_start_node = {}
-          print "Paths using (%s, %s) as transit link:" % (u,v)
+          print("Paths using (%s, %s) as transit link:" % (u,v))
           for (start_node, end_node) in transitinfo:
              if not start_node in transit_by_start_node:
                 transit_by_start_node[start_node] = [end_node]
@@ -520,7 +519,7 @@ class MetricShell(Cmd):
           self.tw.subsequent_indent = ' '*24
           self.tw.width= 80
           for start_node in sorted(transit_by_start_node):
-             print "  * %-16s -> %s" % (start_node, self.tw.fill(", ".join(sorted(transit_by_start_node[start_node]))))
+             print("  * %-16s -> %s" % (start_node, self.tw.fill(", ".join(sorted(transit_by_start_node[start_node])))))
 
       self.tw.width = 80
       
@@ -529,17 +528,17 @@ class MetricShell(Cmd):
       if self.simulation.is_active():
          model = self.simulation               
       if not args:
-         print "Must specify a node"
+         print("Must specify a node")
          return
          self.help_info()
       if args not in model.graph.nodes():
-         print "%s is not a valid node name" % args
+         print("%s is not a valid node name" % args)
          return
 
       self.tw.initial_indent = ''
       self.tw.subsequent_indent = ' '*17
       self.tw.width = 80 - 17         
-      print "Information for node %s:" % (args)
+      print("Information for node %s:" % (args))
       infohash = model.get_node_info(args)
       for key in ['name', 'degree', 'eccentricity',
                   'betweenness', 'neighbors', 'links',
@@ -551,31 +550,31 @@ class MetricShell(Cmd):
          if type(info) == type([]):
             info = ', '.join(info)
          info = str(info)
-         print "%-15s: %s" % (key, self.tw.fill(info))
-      print
+         print("%-15s: %s" % (key, self.tw.fill(info)))
+      print()
 
       self.tw.width = 80
       
    def do_simulation(self, args):
       if args == 'stop':
          if self.simulation.is_active():
-            print self.bt("Simulation ended")
+            print(self.bt("Simulation ended"))
             self.simulation.stop()
          else:
-            print "No simulation is active, type 'simulation start' to start one"
+            print("No simulation is active, type 'simulation start' to start one")
       else:
          if self.simulation.is_active():
-            print "Simulation allready in progress, type 'stop' to end it."
+            print("Simulation allready in progress, type 'stop' to end it.")
             return
-         print self.bt("Simulation mode active, type 'stop' or 'simulation stop' to end it")
+         print(self.bt("Simulation mode active, type 'stop' or 'simulation stop' to end it"))
          self.simulation.start()
 
    def do_undo(self, args):
       if not self.simulation.is_active():
-         print "No simulation is active, type 'simulation start' to start one"
+         print("No simulation is active, type 'simulation start' to start one")
          return
       if not args:
-         print "Must supply a change (number) or 'all'"
+         print("Must supply a change (number) or 'all'")
          return
       if args and args == 'all':
          while self.simulation.has_changes():
@@ -584,76 +583,76 @@ class MetricShell(Cmd):
       try:
          change_no = int(args)
       except:
-         print "Please supply a valid change number (integer)"
+         print("Please supply a valid change number (integer)")
          return
       if not self.simulation.undo(change_no):
-         print "No such change, type 'changes' to see all changes"
+         print("No such change, type 'changes' to see all changes")
          return
-      print "Done"
+      print("Done")
       return
    
    def do_stop(self, args):
       if not self.simulation.is_active():
-         print "No simulation is active, type 'simulation start' to start one"
+         print("No simulation is active, type 'simulation start' to start one")
          return
       self.do_simulation("stop")
       
    def do_changes(self, args):
       if not self.simulation.is_active():
-         print "No simulation is active, type 'simulation start' to start one"
+         print("No simulation is active, type 'simulation start' to start one")
          return
       if not self.simulation.has_changes():
-         print "No changes"
+         print("No changes")
          return      
-      print "Simulated changes:"
+      print("Simulated changes:")
 
       for (i, change) in enumerate(self.simulation.get_changes_strings()):
-         print "  %d: %s" % (i+1, change)
-      print
+         print("  %d: %s" % (i+1, change))
+      print()
 
       subargs = args.split()
       if 'as-commands' in subargs:
-         print "As commands:"
+         print("As commands:")
          for cmd in self.simulation.get_changes_strings(commands=True):
-            print "  %s" % (cmd)
-         print
+            print("  %s" % (cmd))
+         print()
 
       if 'no-effects' in subargs:
          return
       
       if not self.simulation.has_effects():
-         print "No effect on model"
+         print("No effect on model")
          return
 
-      print "Effects of changes:"
+      print("Effects of changes:")
       for arg in subargs:
          if arg not in self.simulation.get_nodes(): continue
          nodechanges = self.simulation.get_effects_node(arg)
-         if not nodechanges.keys(): print " * No changes for %s " % (arg)
-         print " * Details for %s " % (arg)
-         print
+         if not list(nodechanges.keys()): print(" * No changes for %s " % (arg))
+         print(" * Details for %s " % (arg))
+         print()
 
 
 
          self.tw.initial_indent=''
          self.tw.subsequent_indent=' '*17
          self.tw.width=80-17
-         for dest in nodechanges.keys():
+         for dest in list(nodechanges.keys()):
             ddiffs = nodechanges[dest]
             for diff in ddiffs:
                if not diff['new']:
-                  print "  - %s now unreachable" % (dest)
-                  print "    Was reachable via %s" % ("/".join(diff['old']))
+                  print("  - %s now unreachable" % (dest))
+                  print("    Was reachable via %s" % ("/".join(diff['old'])))
                else:
-                  print "  - Path to %s now via %s" % (dest,
-                                                       "/".join(diff['new']))
-                  print "    instead of %s" % ("/".join(diff['old']))
-                  print
+                  print("  - Path to %s now via %s" % (dest,
+                                                       "/".join(diff['new'])))
+                  print("    instead of %s" % ("/".join(diff['old'])))
+                  print()
          return
 
-      print "  * Affects %d nodes total" % (len(self.simulation.get_effects()))
-      print
-      print "  * Summary:"
+      print("  * Affects %d nodes total" % (len(self.simulation.get_effects())))
+      print()
+      print("  * Summary:")
 
       srcsummary, dstsummary = self.simulation.get_effects_summary()
       
@@ -663,42 +662,42 @@ class MetricShell(Cmd):
             for dest in dstsummary:
                if src in dstsummary[dest]:
                   del dstsummary[dest][dstsummary[dest].index(src)]
-            print "    %s changed path to %d destinations" % (src, count)
+            print("    %s changed path to %d destinations" % (src, count))
             if count < 6:
-               print "      => %s" % (sorted(srcsummary[src]))
-               print
+               print("      => %s" % (sorted(srcsummary[src])))
+               print()
             else:
-               print
+               print()
             
       for dest in sorted(dstsummary):
          count = len(dstsummary[dest])
          if count == 0: continue
          if count < 3:
-            print "    %s changed path to %s" \
-                % (" and ".join(sorted(dstsummary[dest])), dest)
+            print("    %s changed path to %s" \
+                % (" and ".join(sorted(dstsummary[dest])), dest))
          else:
-            print "    %d sources changed path to %s" % (count, dest)
+            print("    %d sources changed path to %s" % (count, dest))
          if count > 3 and count < 6:
-            print "      => %s" % (sorted(dstsummary[dest]))
-            print
+            print("      => %s" % (sorted(dstsummary[dest])))
+            print()
          else:
-            print
+            print()
 
    def do_anycast(self, args):
       if not self.simulation.is_active():
-         print "Must be in simulation mode to model anycast"
+         print("Must be in simulation mode to model anycast")
          return
       subargs = args.split()
       if not subargs:
          acnodes = self.simulation.get_anycast_nodes()
          if not acnodes:
-            print "No anycast nodes configured in current simulation."
+            print("No anycast nodes configured in current simulation.")
          else:
-            print "Current anycast nodes:"
+            print("Current anycast nodes:")
             for node in acnodes:
                members = self.simulation.get_anycast_group(node)
-               print "  * %-15s (%s members)" \
-                   % (node, str(len(members)).rjust(2))
+               print("  * %-15s (%s members)" \
+                   % (node, str(len(members)).rjust(2)))
 
             self.gui.clear()
 
@@ -723,7 +722,7 @@ class MetricShell(Cmd):
             self.simulation.remove_anycast_nodes(self.simulation.get_anycast_nodes())
             return
          else:
-            print "Invalid input"
+            print("Invalid input")
             return
             self.help_anycast()
 
@@ -731,27 +730,27 @@ class MetricShell(Cmd):
          if subargs[0] == 'add':
             for node in subargs[1:]:
                if not node in self.simulation.graph.nodes():
-                  print "Invalid node: %s" % node
+                  print("Invalid node: %s" % node)
                   return            
             self.simulation.add_anycast_nodes(subargs[1:])
          elif subargs[0] == 'remove':
             for node in subargs[1:]:
                if not node in self.simulation.graph.nodes():
-                  print "Invalid node: %s" % node
+                  print("Invalid node: %s" % node)
                   return            
             self.simulation.remove_anycast_nodes(subargs[1:])         
          else:
-            print "Invalid input"
+            print("Invalid input")
             return
             self.help_anycast()
       
    def do_reroute(self, args):
       if not self.simulation.is_active():
-         print "Must be in simulation mode to run reroute"
+         print("Must be in simulation mode to run reroute")
          return
       subargs = args.split()
       if not len(subargs) >= 3:
-         print "Invalid input"
+         print("Invalid input")
          self.help_reroute()
          return
 
@@ -762,19 +761,19 @@ class MetricShell(Cmd):
          if subargs[3] == 'equal-path':
             equal = True
          else:
-            print "Warning: Last argument (%s) ignored" % subargs[3]
+            print("Warning: Last argument (%s) ignored" % subargs[3])
             
       ret = self.simulation.reroute(start, end, via, equal)
       
       if not ret[0]:
-         print "No solution could be found.."
+         print("No solution could be found..")
          return
 
       if not ret[1]:
-         print "The path allready goes through %s" % via
+         print("The path allready goes through %s" % via)
          return
       
-      print "The following metric changes are suggested:"
+      print("The following metric changes are suggested:")
       
       G = self.simulation.graph
       shown = {}
@@ -787,17 +786,17 @@ class MetricShell(Cmd):
             oldstr = "%s" % int(w_old)
             newstr = "%s" % int(w)
 
-            print "%-40s %s -> %s" % (linkstr, oldstr.rjust(2),
-                                              newstr.rjust(2))
+            print("%-40s %s -> %s" % (linkstr, oldstr.rjust(2),
+                                              newstr.rjust(2)))
             shown[(u,v)] = True
             shown[(v,u)] = True
             
-      apply = raw_input("Apply changes to current simulation (Y/N)? ")
+      apply = input("Apply changes to current simulation (Y/N)? ")
 
       applied = {}
       if apply.lower() == 'y':
          for e in ret[1]:
-            u,v,w = e[0], e[1], ret[1][e]            
+            u,v,w = e[0], e[1], ret[1][e]['weight']
             if (u,v) in applied: continue
             w_old = G[u][v]['weight']
             if w_old != w:
@@ -805,19 +804,19 @@ class MetricShell(Cmd):
                applied[(u,v)] = True
                applied[(v,u)] = True
       else:
-         print "Not applied."
+         print("Not applied.")
       return
    
 
       
    def do_minimize(self, args):
       if not self.simulation.is_active():
-         print "Must be in simulation mode to run minimize"
+         print("Must be in simulation mode to run minimize")
          return
 
       G = self.simulation.graph
 
-      print "Please wait, this can take a little while..."
+      print("Please wait, this can take a little while...")
       
       H = self.simulation.minimal_link_costs()
       
@@ -829,18 +828,18 @@ class MetricShell(Cmd):
          w_old = G[u][v]['weight']
          if w_old != w:
             if not header:
-               print "The following metric changes are suggested:"
+               print("The following metric changes are suggested:")
                header = True
             linkstr = "%s <-> %s" % (u,v)
             oldstr = "%s" % int(w_old)
             newstr = "%s" % int(w)
 
-            print "%-40s %s -> %s" % (linkstr, oldstr.rjust(2),
-                                              newstr.rjust(2))
+            print("%-40s %s -> %s" % (linkstr, oldstr.rjust(2),
+                                              newstr.rjust(2)))
             shown[(u,v)] = True
             shown[(v,u)] = True
             
-      apply = raw_input("Apply changes to current simulation (Y/N)? ")
+      apply = input("Apply changes to current simulation (Y/N)? ")
 
       applied = {}
       if apply.lower() == 'y':
@@ -853,20 +852,20 @@ class MetricShell(Cmd):
                applied[(u,v)] = True
                applied[(v,u)] = True
       else:
-         print "Not applied."
+         print("Not applied.")
       return
       
    def do_metric(self, args):
       if not self.simulation.is_active():
-         print "Must be in simulation mode to run metric changes"
+         print("Must be in simulation mode to run metric changes")
          return
       if not args:
-         print "Invalid input"
+         print("Invalid input")
          self.help_metric()
          return
       subargs = args.split()
       if not len(subargs) >= 3:
-         print "Invalid input"
+         print("Invalid input")
          self.help_metric()
          return
       bidir = None
@@ -877,55 +876,55 @@ class MetricShell(Cmd):
          elif subargs[3] == 'two-way':
             bidir = True
          else:
-            print "Warning: last argument ignored: %s" % (subargs[3])
+            print("Warning: last argument ignored: %s" % (subargs[3]))
       if self.simulation.changes:
          for i, change in enumerate(self.simulation.changes):
             if change['type'] == Simulation.SC_METRIC \
                    and change['pair'] == (n1,n2):
                self.simulation.undo(i+1)
       if not self.simulation.change_metric(n1, n2, metric,bidir=bidir):
-         print "No link from %s to %s" % (n1, n2)
+         print("No link from %s to %s" % (n1, n2))
       
    
    def do_linkfail(self, args):
       if not self.simulation.is_active():
-         print "Must be in simulation mode to run link changes"
+         print("Must be in simulation mode to run link changes")
          return
       if not args:
-         print "Invalid input"
+         print("Invalid input")
          self.help_linkfail()
          return
       subargs = args.split()
       if not len(subargs) == 2:
-         print "Invalid input"
+         print("Invalid input")
          self.help_linkfail()
          return
       (n1, n2) = subargs[0:2]
 
       if not self.simulation.linkfail(n1, n2):
-         print "No link from %s to %s" % (n1, n2)
+         print("No link from %s to %s" % (n1, n2))
 
    def do_routerfail(self, args):
       if not self.simulation.is_active():
-         print "Must be in simulation mode to run router changes"
+         print("Must be in simulation mode to run router changes")
          return
       if not args:
-         print "Invalid input"
+         print("Invalid input")
          self.help_routerfail()
          return
       subargs = args.split()
       if not len(subargs) == 1:
-         print "Invalid input"
+         print("Invalid input")
          self.help_routerfail()      
          return
       n1 = subargs[0]
 
       if not self.simulation.routerfail(n1):
-         print "No node %s in current topology."
+         print("No node %s in current topology.")
       
    def do_simpath(self, args):
       if not self.simulation.is_active():
-         print "No simulation active, type 'simulation' to start one"
+         print("No simulation active, type 'simulation' to start one")
          return
       subargs = args.split()
       if not len(subargs) == 2:
@@ -933,34 +932,34 @@ class MetricShell(Cmd):
          return
       a, b = subargs[0], subargs[1]
       if a not in self.simulation.get_nodes():
-         print "%s not a valid node, type 'list' to see nodes"\
-               % (a)
+         print("%s not a valid node, type 'list' to see nodes"\
+               % (a))
          return
       if b not in self.simulation.get_nodes():
-         print "%s not a valid node, type 'list' to see nodes"\
-               % (b)
+         print("%s not a valid node, type 'list' to see nodes"\
+               % (b))
 
       length, paths = self.simulation.path(a,b)
 
       if not length and not paths:
-         print "No valid path from %s to %s in model"
+         print("No valid path from %s to %s in model")
          return
       
-      print "Path from %s to %s:"\
-            % (a, b)
-      print "  * Cost: %d" % (length)
+      print("Path from %s to %s:"\
+            % (a, b))
+      print("  * Cost: %d" % (length))
       if len(paths) > 1:
-         print "  * %d paths total (equal cost):" % len(paths)
-         print
+         print("  * %d paths total (equal cost):" % len(paths))
+         print()
 
       self.tw.subsequent_indent = ' '*5
       for path in paths:
-         print "  * Hops: %d" % (len(path))
-         print "  * Path:\n", self.tw.fill(" => ".join(path))
-         print "  * Slowest link: ", self.model.get_path_capacity(path,
+         print("  * Hops: %d" % (len(path)))
+         print("  * Path:\n", self.tw.fill(" => ".join(path)))
+         print("  * Slowest link: ", self.model.get_path_capacity(path,
                                                                   True,
-                                                                  True)
-         print
+                                                                  True))
+         print()
 
       graphdata = {}
       self.gui.clear()
@@ -970,7 +969,7 @@ class MetricShell(Cmd):
       hops = str(len(paths[0]))
       if len(paths) > 1:
          path = reduce(lambda x,y: x+y, paths)
-         hops = "/".join(map(lambda x: str(len(x)), paths))
+         hops = "/".join([str(len(x)) for x in paths])
       
       graphdata['nodegroups'] = self.simulation.get_node_groups(path=path)
       graphdata['edgegroups'] = self.simulation.get_edge_groups(path=paths)
@@ -985,7 +984,7 @@ class MetricShell(Cmd):
       
    def do_diffpath(self, args):
       if not self.simulation.is_active():
-         print "No simulation active, type 'simulation' to start one"
+         print("No simulation active, type 'simulation' to start one")
          return
       subargs = args.split()
       if not len(subargs) == 2:
@@ -993,25 +992,25 @@ class MetricShell(Cmd):
          return
       a, b = subargs[0], subargs[1]
       if a not in self.simulation.get_nodes():
-         print "%s not a valid node, type 'list' to see nodes"\
-               % (a)
+         print("%s not a valid node, type 'list' to see nodes"\
+               % (a))
          return
       if b not in self.simulation.get_nodes():
-         print "%s not a valid node, type 'list' to see nodes"\
-               % (b)
+         print("%s not a valid node, type 'list' to see nodes"\
+               % (b))
 
       slength, spaths = self.simulation.path(a,b)
       length, paths = self.model.path(a,b)      
 
-      print "Path from %s to %s:"\
-            % (a, b)
+      print("Path from %s to %s:"\
+            % (a, b))
 
       if not length:
-         print "Path does not exist in model."
+         print("Path does not exist in model.")
          return
       if not slength:
-         print "Path no longer possible in simulation."
-         print "Type 'path %s %s' to see original path." % (a,b)
+         print("Path no longer possible in simulation.")
+         print("Type 'path %s %s' to see original path." % (a,b))
          return
 
       shops = str(len(spaths[0]))
@@ -1020,38 +1019,38 @@ class MetricShell(Cmd):
       path = paths[0]
       if len(spaths) > 1:
          spath = reduce(lambda x,y: x+y, spaths)
-         shops = "/".join(map(lambda x: str(len(x)), spaths))
+         shops = "/".join([str(len(x)) for x in spaths])
       if len(paths) > 1:
          path = reduce(lambda x,y: x+y, paths)
-         hops = "/".join(map(lambda x: str(len(x)), paths))   
+         hops = "/".join([str(len(x)) for x in paths])
       
       if len(spaths) > 1 or len(paths) > 1:
-         print "  * %d vs %d paths total:" % (len(spaths), len(paths))
-         print
-      print "  * Cost: %d vs %d" % (slength, length)         
-      print "  * Hops: %s vs %s" % (shops, hops)
+         print("  * %d vs %d paths total:" % (len(spaths), len(paths)))
+         print()
+      print("  * Cost: %d vs %d" % (slength, length))
+      print("  * Hops: %s vs %s" % (shops, hops))
 
       self.tw.initial_indent = ' '*5
       self.tw.subsequent_indent = ' '*5      
       for i in range(max(len(paths), len(spaths))):
 
          if i < len(spaths):
-            print "  * Path:\n", self.tw.fill(" => ".join(spaths[i]))
-            print "  * Slowest link: ", self.model.get_path_capacity(spaths[i],
+            print("  * Path:\n", self.tw.fill(" => ".join(spaths[i])))
+            print("  * Slowest link: ", self.model.get_path_capacity(spaths[i],
                                                                   True,
-                                                                  True)            
+                                                                  True))
          else:
-            print "  *    NA"
-         print "    vs."
+            print("  *    NA")
+         print("    vs.")
 
          if i < len(paths):
-            print "%s" % self.tw.fill(" => ".join(paths[i]))
-            print "  * Slowest link: ", self.model.get_path_capacity(paths[i],
+            print("%s" % self.tw.fill(" => ".join(paths[i])))
+            print("  * Slowest link: ", self.model.get_path_capacity(paths[i],
                                                                   True,
-                                                                  True)            
+                                                                  True))
          else:
-            print "      NA"
-         print
+            print("      NA")
+         print()
                
       graphdata = {}
       
@@ -1095,10 +1094,10 @@ class MetricShell(Cmd):
                   equal[source] = [(dest, len(paths))]
 
       if not equal:
-         print "No equal-cost paths found in model."
+         print("No equal-cost paths found in model.")
          return
 
-      print "Equal-cost paths ('path source dest' for details):"
+      print("Equal-cost paths ('path source dest' for details):")
       self.tw.initial_indent = ' '*2
       self.tw.subsequent_indent = ' '*25
       self.tw.width=80-23
@@ -1109,7 +1108,7 @@ class MetricShell(Cmd):
             if d[1] > 2:
                appstr = " (%s)" % d[1]
             dststr.append("%s%s" % (d[0], appstr))
-         print "  * %-15s -> %s" % (source, self.tw.fill(", ".join(dststr)))
+         print("  * %-15s -> %s" % (source, self.tw.fill(", ".join(dststr))))
       return                        
          
    def do_path(self, args):
@@ -1119,39 +1118,39 @@ class MetricShell(Cmd):
          return
       a, b = subargs[0], subargs[1]
       if a not in self.model.get_nodes():
-         print "%s not a valid node, type 'list' to see nodes"\
-               % (a)
+         print("%s not a valid node, type 'list' to see nodes"\
+               % (a))
          return
       if b not in self.model.get_nodes():
-         print "%s not a valid node, type 'list' to see nodes"\
-               % (b)
+         print("%s not a valid node, type 'list' to see nodes"\
+               % (b))
          return
 
       length, paths = self.model.path(a,b)
 
       if not length and not paths:
-         print "No valid path from %s to %s in model"
+         print("No valid path from %s to %s in model")
          return
       
-      print "Path from %s to %s:"\
-            % (a, b)
-      print "  * Cost: %d" % (length)
+      print("Path from %s to %s:"\
+            % (a, b))
+      print("  * Cost: %d" % (length))
       if len(paths) > 1:
-         print "  * %d paths total (equal cost):" % len(paths)
+         print("  * %d paths total (equal cost):" % len(paths))
          #if len(paths) != len(selection):
          #   print "    => %d path(s) preferred" % (len(selection))
-         print
+         print()
       self.tw.initial_indent = ' '*5
       self.tw.subsequent_indent = ' '*6
       for path in paths:
-         print "  * Hops: %d" % (len(path))
-         print "  * Path:\n", self.tw.fill(" => ".join(path))
-         print "  * Slowest link: ", self.model.get_path_capacity(path,
+         print("  * Hops: %d" % (len(path)))
+         print("  * Path:\n", self.tw.fill(" => ".join(path)))
+         print("  * Slowest link: ", self.model.get_path_capacity(path,
                                                                   True,
-                                                                  True)
+                                                                  True))
          #if len(paths) != len(selection) and path in selection:
          #   print "     <<preferred path>>"
-         print
+         print()
 
       self.gui.clear()
       graphdata = {}
@@ -1160,7 +1159,7 @@ class MetricShell(Cmd):
       hops = str(len(paths[0]))
       if len(paths) > 1:
          path = reduce(lambda x,y: x+y, paths)
-         hops = "/".join(map(lambda x: str(len(x)), paths))
+         hops = "/".join([str(len(x)) for x in paths])
       G = self.model.G
       graphdata['nodegroups'] = self.model.get_node_groups(path=path)
       graphdata['edgegroups'] = self.model.get_edge_groups(path=paths)
@@ -1180,11 +1179,9 @@ class MetricShell(Cmd):
       if args:
          Cmd.do_help(self, args)
          return
-      cmdlist = map(lambda x: x.ljust(12),
-                map(lambda x: x.replace('help_', ''),
-             filter(lambda x: x.startswith('help_'), dir(self))))
+      cmdlist = [x.ljust(12) for x in [x.replace('help_', '') for x in [x for x in dir(self) if x.startswith('help_')]]]
       
-      print """
+      print("""
 The program allows you to view topology and metrics, and to
 simulate various changes to investigate their impact on the
 routing.
@@ -1206,22 +1203,22 @@ while in simulation mode.
 More help is available per command, just type 'help <command>'.
 
 Available commands:
-=================="""
+==================""")
 
       cmdstring = " ".join(sorted(cmdlist))
 
       self.tw.initial_indent = ''
       self.tw.subsequent_indent = ''
-      print self.tw.fill(cmdstring)
-      print
+      print(self.tw.fill(cmdstring))
+      print()
       
    #
    # Completions
    #
    def complete_path(self, text, line, begidx, endidx):
       if self.debug:
-         print "text:", text
-         print "line:", line
+         print("text:", text)
+         print("line:", line)
       tokens = line.split()
       length = len(tokens)
       model = self.model
@@ -1230,10 +1227,8 @@ Available commands:
       if tokens[0] in ['metric', 'linkfail', 'linkinfo'] and \
              ((length == 2 and not text) or length >= 3):
          startnode = tokens[1]
-         return filter(lambda x: x.startswith(text),
-                           model.graph.neighbors(startnode))
-      return filter(lambda x: x.startswith(text),
-                        model.graph.nodes())
+         return [x for x in model.graph.neighbors(startnode) if x.startswith(text)]
+      return [x for x in model.graph.nodes() if x.startswith(text)]
 
    def complete_colors(self, text, line, begidx, endidx):
       return ['on', 'off']
@@ -1251,7 +1246,7 @@ Available commands:
       elif length == 4 and not text:
          return ['one-way', 'two-way']
       elif length == 5:
-         return filter(lambda x: x.startswith(text), ['one-way', 'two-way'])
+         return [x for x in ['one-way', 'two-way'] if x.startswith(text)]
       else:
          return self.complete_path(text, line, begidx, endidx)
 
@@ -1263,14 +1258,14 @@ Available commands:
 
    def complete_changes(self, text, line, begidx, endidx):
       length = len(line.split())
-      return filter(lambda x: x.startswith(text), ['as-commands', 'no-effects']) \
+      return [x for x in ['as-commands', 'no-effects'] if x.startswith(text)] \
             + self.complete_path(text, line, begidx, endidx)      
 
    def complete_stats(self, text, line, begidx, endidx):
       return []
 
    def complete_plot(self, text, line, begidx, endidx):
-      return filter(lambda x: x.startswith(text), ['with-load', 'all-metrics'])
+      return [x for x in ['with-load', 'all-metrics'] if x.startswith(text)]
 
    def complete_simplot(self, text, line, begidx, endidx):
       return self.complete_plot(text, line, begidx, endidx)
@@ -1283,7 +1278,7 @@ Available commands:
       if length == 3 and not text:
          return ['with-transit']
       elif length == 4:
-         return filter(lambda x: x.startswith(text), ['with-transit'])
+         return [x for x in ['with-transit'] if x.startswith(text)]
       else:
          return self.complete_path(text, line, begidx, endidx)   
    
@@ -1292,7 +1287,7 @@ Available commands:
       if length == 4 and not text:
          return ['equal-path']
       elif length == 5:
-         return filter(lambda x: x.startswith(text), ['equal-path'])
+         return [x for x in ['equal-path'] if x.startswith(text)]
       else:
          return self.complete_path(text, line, begidx, endidx)
 
@@ -1302,56 +1297,54 @@ Available commands:
       if length == 1 and not text:
          return ['add ', 'remove ', 'clear']
       elif length == 2 and text:
-         return filter(lambda x: x.startswith(text),
-                         ['add ', 'remove ', 'clear'])
+         return [x for x in ['add ', 'remove ', 'clear'] if x.startswith(text)]
       elif length >= 2:
          if tokens[1] == 'clear':
             return []
          if tokens[1] == 'remove':
-            return filter(lambda x: x.startswith(text),
-                          self.simulation.get_anycast_nodes())
+            return [x for x in self.simulation.get_anycast_nodes() if x.startswith(text)]
          return self.complete_path(text, line, begidx, endidx)
 
    #
    # Help-methods
    #
    def help_version(self):
-      print """
+      print("""
             Usage: version
 
             Display the program version.
-            """
+            """)
 
    def help_colors(self):
-      print """
+      print("""
             Usage: colors (on|off)
 
             Display or set current color-setting.
             When set to off no ANSI colors will be used
             in the terminal output.
-            """
+            """)
    
    def help_path(self):
-      print """
+      print("""
             Usage: path A B
 
             Display shortest path from node A to node B.
             Alternate equal-cost paths will be shown
             with dashed lines.
-            """
+            """)
 
    def help_simpath(self):
-      print """
+      print("""
             Usage: simpath A B
 
             Display shortest path from node A to node B
             given the current simulated changes.
             Alternate equal-cost paths will be shown
             with dashed lines.
-            """
+            """)
 
    def help_diffpath(self):
-      print """
+      print("""
             Usage: diffpath A B
 
             Display shortest path from node A to node B
@@ -1364,10 +1357,10 @@ Available commands:
 
             Alternate equal-cost paths will be shown
             with dashed lines.
-            """
+            """)
 
    def help_reroute(self):
-      print """
+      print("""
             Usage: reroute A B C (equal-path)
 
             Try to find a suitable set of metric changes
@@ -1376,28 +1369,28 @@ Available commands:
 
             If the equal-path option is given the result will
             contain multiple cost-equal paths if possible.
-            """
+            """)
 
    def help_anycast(self):
-      print """
+      print("""
             Usage: anycast (add|remove|clear) (<node1 node2 ...>)
 
             Add or remove nodes as anycast nodes.
             When no argument is given list the current anycast
             nodes and display a plot of anycast members.            
-            """
+            """)
             
    def help_minimize(self):
-      print """
+      print("""
             Usage: minimize
 
             Try to reduce as many of the metrics as possible,
             making them as small as possible whilst preserving
             every shortest path in the simulated model.
-            """
+            """)
 
    def help_load(self):
-      print """
+      print("""
             Usage: load <filename>
 
             Load the topology and metrics from
@@ -1406,18 +1399,18 @@ Available commands:
             Useful if you work with several models,
             you don't have to restart the program
             to switch between them.
-            """
+            """)
       
    def help_reload(self):
-      print """
+      print("""
             Usage: reload
 
             Reload the topology and metrics from
             file, replacing base model.
-            """
+            """)
       
    def help_plot(self):
-      print """
+      print("""
             Usage: plot (with-load) (all-metrics)
 
             Display metrics and topology graphically.
@@ -1427,49 +1420,49 @@ Available commands:
 
             If given the 'all-metrics' option, default metrics
             will also be drawn.
-            """
+            """)
 
    def help_asymmetric(self):
-      print """
+      print("""
             Usage: asymmetric
 
             List links with asymmetric metrics.
             If a simulation is active this shows
             data from the current simulated topology.
-            """
+            """)
 
    def help_quit(self):
-      print """
+      print("""
             Usage: quit
 
             End program.
-            """
+            """)
 
    def help_areaplot(self):
-      print """
+      print("""
             Usage: areaplot
 
             Display metrics and topology graphically.
             Show the different IS-IS areas with different
             colors
-            """      
+            """)
 
    def help_stop(self):
-      print """
+      print("""
             Usage: stop
 
             End current simulation.
-            """
+            """)
 
    def help_list(self):
-      print """
+      print("""
             Usage: list
 
             List the name of all nodes.
-            """
+            """)
 
    def help_linkinfo(self):
-      print """
+      print("""
             Usage: linkinfo <source> <destination> (with-transit)
 
             Show various information about the link
@@ -1479,10 +1472,10 @@ Available commands:
 
             If given the with-transit option show (start,end) pairs
             using this link as a transit link.
-            """
+            """)
 
    def help_listequal(self):
-      print """
+      print("""
             Usage: listequal
 
             List all equal-cost (source, destinations) pairs.
@@ -1491,20 +1484,20 @@ Available commands:
 
             If number of paths is greater than two, the
             number of paths is printed after each destination.
-            """
+            """)
       
    def help_png(self):
-      print """
+      print("""
             Usage: png (filename)
 
             Save current topology to a PNG file.
             If a simulation is active, saves the
             simulated topology.
             
-            """
+            """)
       
    def help_simplot(self):
-      print """
+      print("""
             Usage: simplot (with-load)
 
             Display metrics and topology graphically
@@ -1519,39 +1512,39 @@ Available commands:
 
             If given the 'all-metrics' option, default metrics
             will also be drawn.
-            """
+            """)
 
    def help_stats(self):
-      print """
+      print("""
             Usage: stats
 
             Display some statistics of current
             topology. If a simulation is active
             this shows statistics for the current
             simulated topology.
-            """
+            """)
 
    def help_linkloads(self):
-      print """
+      print("""
             Usage: linkloads
 
             Fetch updated link utilizations for the
             last hour (average load). At the moment this
             is a UNINETT specific command.
-            """
+            """)
 
    def help_info(self):
-      print """
+      print("""
             Usage: info <node>
 
             Display some information and stats
             about the given node. If a simulation
             is active this uses the data from
             the simulation.
-            """
+            """)
    
    def help_changes(self):
-      print """
+      print("""
             Usage: changes (as-commands|no-effects) (<source>)
 
             Display current simulated changes
@@ -1565,13 +1558,13 @@ Available commands:
             To list only the changes, and not the effects
             use the 'no-effects' option. These options can
             both be given at the same time.
-            """
+            """)
 
    def help_sim(self):
       self.help_simulation()
    
    def help_simulation(self):
-      print """
+      print("""
             Usage: simulation (start|stop)
 
             Enter or leave simulation mode.  In order to simulate
@@ -1604,10 +1597,10 @@ Available commands:
 
            For more detail of changes, the 'stats', 'changes', 'linkinfo'
            and 'diffpath'-commands might be useful.
-            """
+            """)
 
    def help_metric(self):
-      print """
+      print("""
             Usage:
 
             metric <src> <dst> <value> (one-way|two-way)
@@ -1619,53 +1612,53 @@ Available commands:
 
             If the optional (one-way|two-way) argument is
             given the metric is applied accordingly.
-            """
+            """)
 
    def help_utilizations(self):
-      print """
+      print("""
             Usage: utilizations
 
             Display any links with utilization >= 75%, as well
             as the top 10 utilized links.
-            """
+            """)
 
    def help_linkfail(self):
-      print """
+      print("""
             Usage: linkfail <source> <destination>
 
             Simulate link failure between source and
             destination
-            """
+            """)
 
    def help_routerfail(self):
-      print """
+      print("""
             Usage: routerfail <node>
 
             Simulate router failure by removing
             the node.
-            """
+            """)
       
    def help_undo(self):
-      print """
+      print("""
             Usage: undo <change #>
 
             Undo the change with given number.
             Type 'changes' to get a list of the changes.
-            """
+            """)
 
    #
    # Quit-methods
    #
    def do_EOF(self, arg):
       if self.simulation.is_active():
-         print
+         print()
          self.do_simulation("stop")
-         print
+         print()
          return
       self.do_quit(arg)
 
    def do_quit(self, arg):
-      print "Bye!"
+      print("Bye!")
       try:
          readline.write_history_file(self.histfile)
       except IOError:

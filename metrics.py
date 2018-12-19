@@ -31,7 +31,7 @@ if __name__ == '__main__':
    import sys
 
    if not len(sys.argv) > 1:
-      print "Please specify topology-file"
+      print("Please specify topology-file")
       sys.exit(1)
 
    infile = sys.argv[1]   
@@ -48,7 +48,7 @@ if __name__ == '__main__':
       outpng = None
       if sys.argv[2] == "-s":
          if not len(sys.argv) == 4:
-             print "-s requires a script-file"
+             print("-s requires a script-file")
              sys.exit(1)
          else:
             scriptFile = sys.argv[3]

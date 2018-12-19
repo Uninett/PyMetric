@@ -2,6 +2,9 @@ import networkx as nx
 from pajek import read_pajek
 import utils
 import distutils.version
+from functools import reduce
+from collections import namedtuple
+from itertools import starmap
 
 class Model:
 
@@ -27,7 +30,7 @@ class Model:
       return True
 
    def has_linkloads(self):
-      return len(self.linkloads.keys()) > 0
+      return len(list(self.linkloads.keys())) > 0
    
    def get_in_link_load(self, u,v):
       if not (u,v) in self.linkloads:
@@ -43,23 +46,24 @@ class Model:
       if not top:
          return self.betweenness
       bc = self.betweenness
-      toplist = sorted(bc, lambda x,y: cmp(bc[x], bc[y]))
+      toplist = sorted(bc, key=lambda x: bc[x])
       toplist.reverse()
       return toplist[:top]      
 
    def get_edge_betweenness(self, top=None):
+      Edge = namedtuple('Edge', ['x', 'y'])
       if not top:
          return self.edge_betweenness
       ebc = self.edge_betweenness
-      toplist = sorted(ebc,
-                       lambda (x1,y1), (x2, y2): cmp(ebc[(x1, y1)], ebc[(x2, y2)]))
+      edges = list(starmap(Edge, ebc))
+      toplist = sorted(edges,
+                       key=lambda e: ebc[e])
       toplist.reverse()
       return toplist[:top]
 
    def uneven_metrics(self):
       G = self.G
-      return filter(lambda x: G[x[0]][x[1]] != G[x[1]][x[0]],
-                    G.edges())
+      return [x for x in G.edges() if G[x[0]][x[1]] != G[x[1]][x[0]]]
 
    def get_total_in_load(self, node, G=None, loads=None):
       sum = 0
@@ -79,7 +83,7 @@ class Model:
 
    def get_transit_links(self, u, v):
       paths = self.nodes_and_paths_using_edge(u,v,self.G, True)[1]
-      return paths.keys()
+      return list(paths.keys())
 
    def nodes_and_paths_using_edge(self, u, v, G=None, transit_only=False):
       import time
@@ -108,7 +112,7 @@ class Model:
             if not paths: continue
             paths = paths[1]
             for path in paths:
-               edges = zip(path, path[1:])
+               edges = list(zip(path, path[1:]))
                if (u,v) in edges:
                   if (node,dest) not in retpaths:
                      if transit_only:
@@ -152,7 +156,7 @@ class Model:
       partloads = {}
       counts = {}
       
-      for paths in pathlist.values():
+      for paths in list(pathlist.values()):
          numpaths = len(paths)
          pathloads = {}
          for path in paths:
@@ -170,8 +174,8 @@ class Model:
          try:
             assert float(partloads[(s,t)]) -1 <= float(loads[(s,t)])
          except:
-            print "Assertion failed for (%s,%s) %s > %s" \
-                % (s,t, partloads[(s,t)], loads[(s,t)])
+            print("Assertion failed for (%s,%s) %s > %s" \
+                % (s,t, partloads[(s,t)], loads[(s,t)]))
       #print "  Returning (%s secs)" % (time.time()-stime)
       if use_cache:
          self.linkload_parts[(u,v)] = partloads
@@ -188,14 +192,14 @@ class Model:
          loads = self.linkloads
       if not G:
          G = self.G
-      edges = zip(path, path[1:])
+      edges = list(zip(path, path[1:]))
       if path[0] == u:
          pass
       elif path[-1] == v:         
          edges.reverse()
       elif (u,v) not in edges:
-         print "Invalid call:"
-         print "get_path_loads: (%s -> %s) [%s]" % (u,v,path)         
+         print("Invalid call:")
+         print("get_path_loads: (%s -> %s) [%s]" % (u,v,path))
          return False
       else:
          path1, path2 = [], []
@@ -253,9 +257,9 @@ class Model:
                loadmatrix[t]['in'] = pathcalc[(newpath[-2], newpath[-1])]
             loadmatrix[s] = {'out': loadmatrix[t]['in']}
          else:
-            print "Can't find loaddata for (%s,%s)" % (s,t)
+            print("Can't find loaddata for (%s,%s)" % (s,t))
 
-      edges = zip(path, path[1:])
+      edges = list(zip(path, path[1:]))
 
       retloads = {}
       for (s,t) in edges:
@@ -299,10 +303,9 @@ class Model:
       retinfo = {}
       retinfo['name'] = node
       retinfo['degree'] = G.out_degree(node)
-      retinfo['links'] = map(lambda x: x[2]['l'] + \
-                                " (" + str(int(x[2]['value'])) + ")",
-                             G.edges(node, data=True))
-      retinfo['neighbors'] = G.neighbors(node)
+      retinfo['links'] = [x[2]['l'] + \
+                                " (" + str(int(x[2]['value'])) + ")" for x in G.edges(node, data=True)]
+      retinfo['neighbors'] = list(G.neighbors(node))
       retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])      
       retinfo['eccentricity'] = nx.eccentricity(G, node)
       retinfo['betweenness'] = "%.3f (%.2f%% of max, %.2f%% of avg)" \
@@ -324,7 +327,7 @@ class Model:
             pathcosts[(source, dest)] = costs[dest]
 
       spathcosts = sorted(pathcosts,
-                          cmp=lambda x,y: cmp(pathcosts[x], pathcosts[y]))
+                          key=lambda x: pathcosts[x])
 
       spathcosts.reverse()
 
@@ -396,7 +399,7 @@ class Model:
 
    def get_path_capacity(self, path, as_string=False, slowest_only=False):
 
-      path_links = zip(path, path[1:])
+      path_links = list(zip(path, path[1:]))
       slowest = None
       if slowest_only:
          slowest = min([self.get_link_capacity(u,v)
@@ -427,8 +430,8 @@ class Model:
       try:
          utilz = self.get_out_link_load(u,v)/float(self.get_link_capacity(u,v))
       except ZeroDivisionError:
-         print "Warning: Could not get link capacity for link:"
-         print "%s => %s" % (u,v)
+         print("Warning: Could not get link capacity for link:")
+         print("%s => %s" % (u,v))
          utilz = 0.0
       return utilz
 
@@ -455,11 +458,11 @@ class Model:
             mpath = path[0]
             
             for p in path[1:]:
-               rpath_edges += zip(p, p[1:])
-               rpath_edges += zip(p[1:], p)
+               rpath_edges += list(zip(p, p[1:]))
+               rpath_edges += list(zip(p[1:], p))
 
-         mpath_edges = zip(mpath, mpath[1:])
-         mpath_edges += zip(mpath[1:], mpath)
+         mpath_edges = list(zip(mpath, mpath[1:]))
+         mpath_edges += list(zip(mpath[1:], mpath))
       
       ebc = self.edge_betweenness
       top = self.get_edge_betweenness(top=n)
@@ -602,10 +605,12 @@ class Model:
 
    def _make_weighted_copy(self):
       G = self.graph.copy()
+      H = self.graph.copy()
       for (u,v,d) in G.edges(data=True):
-         G.remove_edge(u,v)
-         G.add_edge(u,v,weight=d['value'])
-      return G
+         w = d['value']
+         H.remove_edge(u,v)
+         H.add_edge(u,v,weight=w)
+      return H
 
    def _refresh_betweenness(self):
       self.betweenness = None
@@ -632,8 +637,7 @@ class Model:
          return paths
 
       for i in range(len(paths)):
-         areahops = map(lambda x: areas[x[0]] == areas[x[1]],
-                        zip(paths[i], paths[i][1:]))
+         areahops = [areas[x[0]] == areas[x[1]] for x in zip(paths[i], paths[i][1:])]
          p_attr[i] = {'areahops': areahops, 'candidate': True}
 
       for hop in range(1, max([2] + [len(p) for p in paths]) - 2):
@@ -647,22 +651,22 @@ class Model:
             pathhop = (path[hop], path[hop+1])
             pathah  = p_attr[i]['areahops'][hop]
 
-            print "Comparing %s to %s and %s to %s (hop %s)" \
-                  % (pathhop, last_hop, pathah, last_areahop, hop)
+            print("Comparing %s to %s and %s to %s (hop %s)" \
+                  % (pathhop, last_hop, pathah, last_areahop, hop))
             if last_hop == None:
                last_hop = pathhop
                last_areahop = pathah
             elif pathhop != last_hop:
                if pathah != last_areahop:
                   diff = True
-                  print "breaking at hop %s" % hop
+                  print("breaking at hop %s" % hop)
                   break
 
          if diff:
             for i in range(len(paths)):
                if hop > len(paths[i]) - 1: continue
-               print "Looking at path %s with areahops %s, index %s" \
-                  % (paths[i], p_attr[i]['areahops'], hop)
+               print("Looking at path %s with areahops %s, index %s" \
+                  % (paths[i], p_attr[i]['areahops'], hop))
                if p_attr[i]['areahops'][hop] != True:
                   p_attr[i]['candidate'] = False
             diff = False
@@ -691,7 +695,7 @@ class Simulation:
       
    def get_stats(self):
       bc = self.betweenness
-      top = sorted(bc, lambda x,y: cmp(bc[x], bc[y]))
+      top = sorted(bc, key=lambda x: bc[x])
       top.reverse()
 
       stats = {}
@@ -735,10 +739,9 @@ class Simulation:
       retinfo = {}
       retinfo['name'] = node
       retinfo['degree'] = G.out_degree(node)
-      retinfo['links'] = map(lambda x: self.model.graph.get_edge_data(x[0], x[1])['l']\
-                                + " (" + str(int(x[2])) + ")",
-                             G.edges(node, data=True))
-      retinfo['neighbors'] = G.neighbors(node)
+      retinfo['links'] = [self.model.graph.get_edge_data(x[0], x[1])['l']\
+                                + " (" + str(int(x[2]['weight'])) + ")" for x in G.edges(node, data=True)]
+      retinfo['neighbors'] = list(G.neighbors(node))
       retinfo['longest paths'] = self.get_max_cost_paths(nodes=[node])
       retinfo['eccentricity'] = nx.eccentricity(G, node)
       retinfo['betweenness'] = "%.3f (%.2f%% of max, %.2f%% of avg)" \
@@ -783,7 +786,7 @@ class Simulation:
 
    def get_transit_links(self, u, v):
       paths = self.model.nodes_and_paths_using_edge(u,v,self.graph, True)[1]
-      return paths.keys()
+      return list(paths.keys())
 
    def get_max_cost_paths(self, top=8, nodes=None):
       sources = self.graph.nodes()
@@ -798,7 +801,7 @@ class Simulation:
             pathcosts[(source, dest)] = costs[dest]
 
       spathcosts = sorted(pathcosts,
-                          cmp=lambda x,y: cmp(pathcosts[x], pathcosts[y]))
+                          key=lambda x: pathcosts[x])
 
       spathcosts.reverse()
 
@@ -865,8 +868,7 @@ class Simulation:
 
    def uneven_metrics(self):
       G = self.graph
-      return filter(lambda x: G[x[0]][x[1]] != G[x[1]][x[0]],
-                    G.edges())
+      return [x for x in G.edges() if G[x[0]][x[1]] != G[x[1]][x[0]]]
    
    def has_changes(self):
       return len(self.changes) > 0
@@ -888,7 +890,7 @@ class Simulation:
       for source in self.effects:
          no_changes = 0
 
-         for dest in self.effects[source].keys():
+         for dest in list(self.effects[source].keys()):
             ddiffs = self.effects[source][dest]
             no_changes += len(ddiffs)            
             if dest in dstsummary:
@@ -909,15 +911,18 @@ class Simulation:
       if not top:
          return self.betweenness
       bc = self.betweenness
-      toplist = sorted(bc, lambda x,y: cmp(bc[x], bc[y]))
+      toplist = sorted(bc, key=lambda x: bc[x])
       toplist.reverse()
-      return toplist[:top]      
+      return toplist[:top]
 
    def get_edge_betweenness(self, top=None):
+      Edge = namedtuple('Edge', 'x y')
       if not top:
          return self.edge_betweenness
       ebc = self.edge_betweenness
-      toplist = sorted(ebc, lambda (x1,y1), (x2, y2): cmp(ebc[(x1, y1)], ebc[(x2, y2)]))
+      edges = list(starmap(Edge, ebc))
+      toplist = sorted(edges,
+                       key=lambda e: ebc[e])
       toplist.reverse()
       return toplist[:top]
 
@@ -927,7 +932,7 @@ class Simulation:
    def get_anycast_group(self, node):
       if node not in self.acnodes:
          return None
-      return filter(lambda x: node in self.acgroups[x], self.acgroups.keys())
+      return [x for x in list(self.acgroups.keys()) if node in self.acgroups[x]]
    
    def get_anycast_nodes(self):
       return list(self.acnodes)
@@ -1006,21 +1011,21 @@ class Simulation:
          smpath = spath[0]
             
          for p in spath[1:]:
-            srpath_edges += zip(p, p[1:])
-            srpath_edges += zip(p[1:], p)
+            srpath_edges += list(zip(p, p[1:]))
+            srpath_edges += list(zip(p[1:], p))
 
       if type(path[0]) == type([]):
          if len(path) > 1: multi = True
          mpath = path[0]
             
          for p in path[1:]:
-            rpath_edges += zip(p, p[1:])
-            rpath_edges += zip(p[1:], p)
+            rpath_edges += list(zip(p, p[1:]))
+            rpath_edges += list(zip(p[1:], p))
       
-      mpath_edges = zip(mpath, mpath[1:])
-      mpath_edges += zip(mpath[1:], mpath)
-      smpath_edges = zip(smpath, smpath[1:])
-      smpath_edges += zip(smpath[1:], smpath)      
+      mpath_edges = list(zip(mpath, mpath[1:]))
+      mpath_edges += list(zip(mpath[1:], mpath))
+      smpath_edges = list(zip(smpath, smpath[1:]))
+      smpath_edges += list(zip(smpath[1:], smpath))
 
       mopath_edges = list(set(mpath_edges) - set(smpath_edges))
       mupath_edges = list(set(mpath_edges).intersection(set(smpath_edges)))
@@ -1059,114 +1064,114 @@ class Simulation:
       for (u, v, d) in self.graph.edges(data=True):
          debug = False
          #if u == 'oslo-gw' or v == 'oslo-gw': debug = True
-         if debug: print "Looking at (%s, %s, %s)" % (u, v, d)
+         if debug: print("Looking at (%s, %s, %s)" % (u, v, d))
          if (u,v) in redges:
-            if debug: print "In redges...ignoring"
+            if debug: print("In redges...ignoring")
             continue
          if (ebc[(u,v)] > threshold and ebc[(v,u)] > threshold) \
                 or (u,v) in top:            
-            if debug: print "Is main edge"
+            if debug: print("Is main edge")
             
             if (u,v) in mupath_edges and (u,v) not in rupath_edges:
-               if debug: print "Is mupath_edge"
+               if debug: print("Is mupath_edge")
                if 'mainupath' not in groups:
                   groups['mainupath'] = [(u,v,d)]
                else:
                   groups['mainupath'].append((u,v,d))
             elif (u,v) in rupath_edges:
-               if debug: print "Is rupath_edge"                              
+               if debug: print("Is rupath_edge")
                if 'mainualtpath' not in groups:
                   groups['mainualtpath'] = [(u,v,d)]
                else:
                   groups['mainualtpath'].append((u,v,d))
             elif (u,v) in smpath_edges and srpath_edges and (u,v) not in srpath_edges:
-               if debug: print "Is smpath_edge (not sr)"               
+               if debug: print("Is smpath_edge (not sr)")
                if 'mainaltpath' not in groups:
                   groups['mainaltpath'] = [(u,v,d)]
                else:
                   groups['mainaltpath'].append((u,v,d))
             elif (u,v) in smpath_edges:
-               if debug: print "Is smpath_edge"               
+               if debug: print("Is smpath_edge")
                if 'mainpath' not in groups:
                   groups['mainpath'] = [(u,v,d)]
                else:
                   groups['mainpath'].append((u,v,d))
             elif (u,v) in srpath_edges:
-               if debug: print "Is srpath_edge"               
+               if debug: print("Is srpath_edge")
                if 'mainaltpath' not in groups:
                   groups['mainaltpath'] = [(u,v,d)]
                else:
                   groups['mainaltpath'].append((u,v,d))
             elif (u,v) in mopath_edges:
-               if debug: print "Is mopath_edge"               
+               if debug: print("Is mopath_edge")
                if 'mainopath' not in groups:
                   groups['mainopath'] = [(u,v,d)]
                else:
                   groups['mainopath'].append((u,v,d))
             elif (u,v) in ropath_edges:
-               if debug: print "Is ropath_edge"               
+               if debug: print("Is ropath_edge")
                if 'mainoaltpath' not in groups:
                   groups['mainoaltpath'] = [(u,v,d)]
                else:
-                  groups['mainoaltpath'].append((u,v,d))                  
+                  groups['mainoaltpath'].append((u,v,d))
             else:
-               if debug: print "Is notpath_edge"                              
+               if debug: print("Is notpath_edge")
                if 'main' not in groups:
                   groups['main'] = [(u,v,d)]
                else:
                   groups['main'].append((u,v,d))
          else:
-            if debug: print "Is normal edge"            
+            if debug: print("Is normal edge")
             if (u,v) in mupath_edges and (u,v) not in rupath_edges:
-               if debug: print "Is mupath_edge"               
+               if debug: print("Is mupath_edge")
                if 'normalupath' not in groups:
                   groups['normalupath'] = [(u,v,d)]
                else:
                   groups['normalupath'].append((u,v,d))
             elif (u,v) in rupath_edges:
-               if debug: print "Is rupath_edge"                              
+               if debug: print("Is rupath_edge")
                if 'normalualtpath' not in groups:
                   groups['normalualtpath'] = [(u,v,d)]
                else:
-                  groups['normalualtpath'].append((u,v,d))                  
+                  groups['normalualtpath'].append((u,v,d))
             elif (u,v) in smpath_edges and srpath_edges and (u,v) not in srpath_edges:
-               if debug: print "Is smpath_edge (not sr)"               
+               if debug: print("Is smpath_edge (not sr)")
                if 'normalaltpath' not in groups:
                   groups['normalaltpath'] = [(u,v,d)]
                else:
-                  groups['normalaltpath'].append((u,v,d))                  
+                  groups['normalaltpath'].append((u,v,d))
             elif (u,v) in rupath_edges:
-               if debug: print "Is rupath_edge"               
+               if debug: print("Is rupath_edge")
                if 'normalualtpath' not in groups:
                   groups['normalualtpath'] = [(u,v,d)]
                else:
-                  groups['normalualtpath'].append((u,v,d))                  
+                  groups['normalualtpath'].append((u,v,d))
             elif (u,v) in smpath_edges:
-               if debug: print "Is smpath_edge"               
+               if debug: print("Is smpath_edge")
                if 'normalpath' not in groups:
                   groups['normalpath'] = [(u,v,d)]
                else:
                   groups['normalpath'].append((u,v,d))
             elif (u,v) in srpath_edges:
-               if debug: print "Is srpath_edge"               
+               if debug: print("Is srpath_edge")
                if 'normalaltpath' not in groups:
                   groups['normalaltpath'] = [(u,v,d)]
                else:
                   groups['normalaltpath'].append((u,v,d))
             elif (u,v) in mopath_edges:
-               if debug: print "Is mopath_edge"               
+               if debug: print("Is mopath_edge")
                if 'normalopath' not in groups:
                   groups['normalopath'] = [(u,v,d)]
                else:
                   groups['normalopath'].append((u,v,d))
             elif (u,v) in ropath_edges:
-               if debug: print "Is ropath_edge"               
+               if debug: print("Is ropath_edge")
                if 'normaloaltpath' not in groups:
                   groups['normaloaltpath'] = [(u,v,d)]
                else:
                   groups['normaloaltpath'].append((u,v,d))
             else:
-               if debug: print "Is notpath_edge"               
+               if debug: print("Is notpath_edge")
                if 'normal' not in groups:
                   groups['normal'] = [(u,v,d)]
                else:
@@ -1299,11 +1304,11 @@ class Simulation:
             mpath = path[0]
             
             for p in path[1:]:
-               rpath_edges += zip(p, p[1:])
-               rpath_edges += zip(p[1:], p)
+               rpath_edges += list(zip(p, p[1:]))
+               rpath_edges += list(zip(p[1:], p))
 
-         mpath_edges = zip(mpath, mpath[1:])
-         mpath_edges += zip(mpath[1:], mpath)
+         mpath_edges = list(zip(mpath, mpath[1:]))
+         mpath_edges += list(zip(mpath[1:], mpath))
       
       ebc = self.edge_betweenness
       top = self.get_edge_betweenness(top=n)
@@ -1395,7 +1400,7 @@ class Simulation:
          return False
 
       removed_edges = []
-      for node in self.graph.neighbors(n1):
+      for node in list(self.graph.neighbors(n1)):
          removed_edges.append((n1, node, self.graph[n1][node]))
          self.graph.remove_edge(n1, node)
          removed_edges.append((node, n1, self.graph[node][n1]))
@@ -1532,7 +1537,7 @@ class Simulation:
 
       target_no_paths = [1]
       if equal:
-         target_no_paths = range(2,10) + [1]
+         target_no_paths = list(range(2,10)) + [1]
       
       ocost, opaths = self.path(start, stop)
       cost1, paths1 = self.path(start, via)
@@ -1540,14 +1545,14 @@ class Simulation:
       if not start in G.nodes() \
       or not stop in G.nodes() \
       or not via in G.nodes():
-         print "Invalid nodename"
+         print("Invalid nodename")
          return []
 
       for path in paths1:
          for node in path:
             if node == stop:
-               print "Path to via-node is through stop-node."
-               print "Exiting"
+               print("Path to via-node is through stop-node.")
+               print("Exiting")
                return (success, results)
             if node == via:
                continue
@@ -1566,12 +1571,12 @@ class Simulation:
 
       allowed_nodes = list(U.union(A))
 
-      if debug: print "Parameters:"
-      if debug: print "S: %s" % (S)
-      if debug: print "U: %s" % (U)
-      if debug: print "V: %s" % (V)
+      if debug: print("Parameters:")
+      if debug: print("S: %s" % (S))
+      if debug: print("U: %s" % (U))
+      if debug: print("V: %s" % (V))
 
-      if debug: print "Allowed nodes: %s" % (allowed_nodes)
+      if debug: print("Allowed nodes: %s" % (allowed_nodes))
       
       finished = False
       neighbor_inc = 1
@@ -1582,7 +1587,7 @@ class Simulation:
          if time.time() - start_t >= timeout:
             finished = True
             success = False
-            print "Timed out!"
+            print("Timed out!")
             return (success, results)
          
          ocost, opaths = self.path(start, stop, K)
@@ -1590,33 +1595,33 @@ class Simulation:
          cost1, paths1 = self.path(start, via, I)
          cost2, paths2 = self.path(via, stop, J)
 
-         if debug: print "Opath now: %s" % opaths
+         if debug: print("Opath now: %s" % opaths)
 
-         if debug: print "Comparing %s+%s to %s" % (cost2, cost1, ocost)
+         if debug: print("Comparing %s+%s to %s" % (cost2, cost1, ocost))
          if via in W and len(opaths) in target_no_paths:
-            if debug: print "Success!"
+            if debug: print("Success!")
             finished = True
             success = True
             continue
          
          nochange = True
 
-         if debug: print "Negative adjustment loop"
+         if debug: print("Negative adjustment loop")
          for path1 in paths1:
             for (u,v) in zip(path1, path1[1:]):
                w = I[u][v]['weight']
-               if debug: print "Considering (%s,%s,%s) (-1)" % (u,v,w)
+               if debug: print("Considering (%s,%s,%s) (-1)" % (u,v,w))
 
                if u == start or u == stop or v == start or v == stop:
-                  if debug: print "A: Bad effect = False"
+                  if debug: print("A: Bad effect = False")
                   bad_effect = False
                   minmax = False
-                  if debug: print "Inner negative adjustment loop"
+                  if debug: print("Inner negative adjustment loop")
                   while (not bad_effect) and (not minmax):
                      w = w - 1
 
                      if w < 1:
-                        if debug: print "Reached minimum metric..."
+                        if debug: print("Reached minimum metric...")
                         minmax = True
                         break
 
@@ -1625,7 +1630,7 @@ class Simulation:
 
                      effects = self._refresh_effects(G, I)
 
-                     if debug: print "B: Bad effect = False"
+                     if debug: print("B: Bad effect = False")
                      bad_effect = False
                      for src in effects:
                         if src not in allowed_nodes:
@@ -1638,22 +1643,22 @@ class Simulation:
                         ocost, opaths = self.path(start, stop, K)
                         W = set(reduce(lambda x,y: x+y, opaths))                  
                         cost1, paths1 = self.path(start, via, I)
-                        if debug: print "Opath now: %s" % opaths
-                        if debug: print "Comparing %s+%s to %s" % (cost2, cost1, ocost)                             
+                        if debug: print("Opath now: %s" % opaths)
+                        if debug: print("Comparing %s+%s to %s" % (cost2, cost1, ocost))
                         if via in W and len(opaths) in target_no_paths:
-                           if debug: print "Success!"
+                           if debug: print("Success!")
                            finished = True
                            success = True
                            break
                   if minmax:
-                     if debug: print "A2: Bad effect = 2"
+                     if debug: print("A2: Bad effect = 2")
                      bad_effect = 2
 
                else:
                   w = w - 1
 
                   if w < 1:
-                     if debug: print "Reached minimum metric..."
+                     if debug: print("Reached minimum metric...")
                      continue
 
                   I.add_edge(u,v,weight=w)
@@ -1661,7 +1666,7 @@ class Simulation:
 
                   effects = self._refresh_effects(G, I)
 
-                  if debug: print "C: Bad effect = False"
+                  if debug: print("C: Bad effect = False")
                   bad_effect = False
                   for src in effects:
                      if src not in allowed_nodes:
@@ -1677,38 +1682,38 @@ class Simulation:
                elif bad_effect == 2:
                   continue
                else:
-                  if debug: print "A: nochange = False"
+                  if debug: print("A: nochange = False")
                   nochange = False
 
          ocost, opaths = self.path(start, stop, K)
          W = set(reduce(lambda x,y: x+y, opaths))                  
          cost1, paths1 = self.path(start, via, I)
-         if debug: print "Opath now: %s" % opaths
-         if debug: print "Comparing %s+%s to %s" % (cost2, cost1, ocost)                             
+         if debug: print("Opath now: %s" % opaths)
+         if debug: print("Comparing %s+%s to %s" % (cost2, cost1, ocost))
          if via in W and len(opaths) in target_no_paths:
-            if debug: print "Success!"
+            if debug: print("Success!")
             finished = True
             success = True
             continue
          
-         if debug: print "Positive adjustment loop"
+         if debug: print("Positive adjustment loop")
          for opath in opaths:
             for (u,v) in zip(opath, opath[1:]):
                if u in V and v in V: continue
                w = I[u][v]['weight']
 
-               if debug: print "Considering (%s,%s,%s) (+1)" % (u,v,w)
+               if debug: print("Considering (%s,%s,%s) (+1)" % (u,v,w))
 
                if u == start or u == stop or v == start or v == stop:
-                  if debug: print "D: Bad effect = False"
+                  if debug: print("D: Bad effect = False")
                   bad_effect = False
                   minmax = False
-                  if debug: print "Inner positive adjustment loop"
+                  if debug: print("Inner positive adjustment loop")
                   while (not bad_effect) and (not minmax):
                      w = w + 1
 
                      if w > max_metric:
-                        if debug: print "Reached maximum metric..."
+                        if debug: print("Reached maximum metric...")
                         minmax = True
                         continue
 
@@ -1717,7 +1722,7 @@ class Simulation:
 
                      effects = self._refresh_effects(G, I)
 
-                     if debug: print "E: Bad effect = False"
+                     if debug: print("E: Bad effect = False")
                      bad_effect = False
                      for src in effects:
                         if src not in allowed_nodes:
@@ -1730,28 +1735,28 @@ class Simulation:
                         ocost, opaths = self.path(start, stop, K)
                         W = set(reduce(lambda x,y: x+y, opaths))                  
                         cost1, paths1 = self.path(start, via, I)
-                        if debug: print "Opath now: %s" % opaths
-                        if debug: print "Comparing %s+%s to %s" % (cost2, cost1, ocost)                             
+                        if debug: print("Opath now: %s" % opaths)
+                        if debug: print("Comparing %s+%s to %s" % (cost2, cost1, ocost))
                         if via in W and len(opaths) in target_no_paths:
-                           if debug: print "Success!"
+                           if debug: print("Success!")
                            finished = True
                            success = True
                            break
                   if minmax:
-                     if debug: print "D2: Bad effect = 2"
+                     if debug: print("D2: Bad effect = 2")
                      bad_effect = 2
 
                else:
                   w = w + 1
                   if w > max_metric:
-                     if debug: print "Reached maximum metric..."
+                     if debug: print("Reached maximum metric...")
                      continue
                   I.add_edge(u,v,weight=w)
                   K.add_edge(u,v,weight=w)
 
                   effects = self._refresh_effects(G, I)
 
-                  if debug: print "F: Bad effect = False"
+                  if debug: print("F: Bad effect = False")
                   bad_effect = False
                   for src in effects:
                      if src not in allowed_nodes:
@@ -1767,36 +1772,36 @@ class Simulation:
                elif bad_effect == 2:
                   continue
                else:
-                  if debug: print "B: nochange = False"
+                  if debug: print("B: nochange = False")
                   nochange = False
          ocost, opaths = self.path(start, stop, K)
          W = set(reduce(lambda x,y: x+y, opaths))                  
          cost1, paths1 = self.path(start, via, I)
-         if debug: print "Opath now: %s" % opaths
+         if debug: print("Opath now: %s" % opaths)
 
-         if debug: print "Comparing %s+%s to %s" % (cost2, cost1, ocost)         
+         if debug: print("Comparing %s+%s to %s" % (cost2, cost1, ocost))
          if via in W and len(opaths) in target_no_paths:
-            if debug: print "Success!"
+            if debug: print("Success!")
             finished = True
             success = True
             continue
 
-         if debug: print "2nd negative adjustment loop"
+         if debug: print("2nd negative adjustment loop")
          for path2 in paths2:
             for (u,v) in zip(path2, path2[1:]):
                w = J[u][v]['weight']
-               if debug: print "Considering (%s,%s,%s) (-1)" % (u,v,w)
+               if debug: print("Considering (%s,%s,%s) (-1)" % (u,v,w))
                w = w - 1
 
                if w < 1:
-                  if debug: print "Reached minimum metric..."
+                  if debug: print("Reached minimum metric...")
                   continue                  
                J.add_edge(u,v,weight=w)
                K.add_edge(u,v,weight=w)
 
                effects = self._refresh_effects(H, J)
 
-               if debug: print "G: Bad effect = False"
+               if debug: print("G: Bad effect = False")
                bad_effect = False
                for src in effects:
                   if src not in allowed_nodes:
@@ -1810,24 +1815,24 @@ class Simulation:
                   K.add_edge(u,v,weight=w+1)
                   continue
                else:
-                  if debug: print "C: nochange = False"
+                  if debug: print("C: nochange = False")
                   nochange = False
 
-         if debug: print "Considering increasing allowed nodes"
+         if debug: print("Considering increasing allowed nodes")
          if nochange:
             if neighbor_inc > 2:
-               if debug: print "No solution found"
+               if debug: print("No solution found")
                finished = True
                success = False
                continue
             append_nodes = []
             for node in allowed_nodes:
                append_nodes += G.neighbors(node)
-            if debug: print "Increasing set of nodes"
+            if debug: print("Increasing set of nodes")
             allowed_nodes += append_nodes
             neighbor_inc += 1
          else:
-            if debug: print "nochange was False, so going on"
+            if debug: print("nochange was False, so going on")
 
 
       for (u,v,w) in K.edges(data=True):
@@ -1856,10 +1861,7 @@ class Simulation:
       G = self.graph
       H = self.graph.copy()
 
-      edges = sorted(H.edges(data=True), cmp=lambda x,y: cmp(y[2]['weight'], x[2]['weight']) \
-                                    or cmp(ebc[(x[0],x[1])],
-                                           ebc[(y[0],y[1])]))
-
+      edges = sorted(H.edges(data=True), key=lambda x: (-x[2]['weight'], ebc[(x[0],x[1])]))
       finished = False
 
       while not finished:
@@ -1872,7 +1874,7 @@ class Simulation:
                continue
 
             old_w = G[u][v]['weight']
-            if debug: print "Considering (%s,%s)" % (u,v)
+            if debug: print("Considering (%s,%s)" % (u,v))
 
             count = 1
             while count:
@@ -1880,7 +1882,7 @@ class Simulation:
                count = 0
                if w < 1: continue
 
-               if debug: print "Trying metrics..",
+               if debug: print("Trying metrics..")
                H.add_edge(u,v,weight=w)
                H.add_edge(v,u,weight=w)
                effects = self._refresh_effects(G, H)
@@ -1891,11 +1893,11 @@ class Simulation:
                   else:
                      H.add_edge(u,v,weight=w+1)
                      H.add_edge(v,u,weight=w+1)
-                  if debug: print "failed! (%s->%s)" % (old_w, w+1)
+                  if debug: print("failed! (%s->%s)" % (old_w, w+1))
                else:
                   count = 1
                   adjustment_found = True
-                  if debug: print "ok"
+                  if debug: print("ok")
 
          if not adjustment_found:
             finished = True
@@ -1944,14 +1946,14 @@ class Simulation:
                else:
                   diff_by_dst[dest] = [diff_res]
 
-         if diff_by_dst.keys():
+         if list(diff_by_dst.keys()):
             diff_paths[source] = diff_by_dst
 
       #print diff_paths
       return diff_paths
 
    def _path_cmp(self, oldpaths, newpaths):
-      if cmp(oldpaths, newpaths) != 0:
+      if oldpaths != newpaths:
          return {'old': oldpaths, 'new': newpaths}
       return None
 
@@ -2039,7 +2041,7 @@ class Simulation:
                         deduct = 0
                         
                         for npath in new_paths:
-                           edges = zip(npath, npath[1:])
+                           edges = list(zip(npath, npath[1:]))
                            if (v,u) in edges:
                               deduct = old_path_parts[(vianode, dest)][(u,v)]
                               deduct *= float(no_old_paths/no_new_paths)
@@ -2064,7 +2066,7 @@ class Simulation:
                      no_old_paths = len(effects[u][dest][0]['old'])
                      deduct = 0
                      for npath in new_paths:
-                        edges = zip(npath, npath[1:])
+                        edges = list(zip(npath, npath[1:]))
                         if (v,u) in edges:
                            deduct = old_path_parts[(vianode, dest)][(u,v)]
                            deduct *= float(no_old_paths/no_new_paths)
@@ -2104,7 +2106,7 @@ class Simulation:
             #    % (old, n1, n2)
 
             for path in new_paths:
-               edges = zip(path, path[1:])                     
+               edges = list(zip(path, path[1:]))
                for (u,v) in edges:
                   if (u,v) not in pos_changes:
                      pos_changes[(u,v)] = old
@@ -2153,8 +2155,8 @@ class Simulation:
 
       for (u,v) in sorted(newloads):
          if newloads[(u,v)] < 0:
-            print "Assertion failed for load on (%s,%s): %s" \
-                % (u,v, newloads[(u,v)])
+            print("Assertion failed for load on (%s,%s): %s" \
+                % (u,v, newloads[(u,v)]))
 
       self.linkloads = newloads
 

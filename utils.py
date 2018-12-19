@@ -1,5 +1,5 @@
 import networkx as nx
-import httplib
+import http.client
 
 def reciprocity(G):
     """Calculate reciprocity of graph, i.e. the ratio of the edges in
@@ -48,7 +48,7 @@ def edge_labels(edges, edgegroups=[], suppress_default=True):
    try:
       assert len(edges) == len(labels)
    except:
-      print "Assertion fail: %s != %s" % (len(edges), len(labels))
+      print("Assertion fail: %s != %s" % (len(edges), len(labels)))
 
    return labels
 
@@ -73,7 +73,7 @@ def cap2str(capacity):
       
 def read_linkloads(G, host, url):
 
-    conn = httplib.HTTPConnection(host)
+    conn = http.client.HTTPConnection(host)
     conn.request("GET", url)
     r1 = conn.getresponse()
     if r1.status != 200:
@@ -141,8 +141,8 @@ def calc_ratio(G, loads, u, v, discard_inverse=False, no_diff=False, exclude_edg
      return 0
   ratio = totload / float(sum)
   if ratio < 0:
-      print "Assertion failed for ratio (%s, %s): %s" \
-          % (u, v, ratio)
+      print("Assertion failed for ratio (%s, %s): %s" \
+          % (u, v, ratio))
   if ratio > 1:
       ratio = 1
   return ratio

@@ -24,12 +24,12 @@ class ScriptEngine():
 
    def run(self, script):
       if not os.path.isfile(script):
-         print >> sys.stderr, "No such file: %s" % script
+         print("No such file: %s" % script, file=sys.stderr)
          return 1
       try:
          fh = open(script, "r")
       except:
-         print >> sys.stderr, "Something went wrong when trying to open scriptfile"
+         print("Something went wrong when trying to open scriptfile", file=sys.stderr)
          return 1
       self.state = self.STATE_OPEN
       self.current_script = script
@@ -49,7 +49,7 @@ class ScriptEngine():
          elif line.startswith('end'): self._do_end()
          else:
             self.state = self.STATE_ERROR
-            print >> sys.stderr, "Syntax error at line %d: Unknown keyword" % self.current_line
+            print("Syntax error at line %d: Unknown keyword" % self.current_line, file=sys.stderr)
 
       if self.state == self.STATE_END:
          self.current_script = None
@@ -66,7 +66,7 @@ class ScriptEngine():
 
    def _do_begin(self):
       if self.state > self.STATE_OPEN:
-         print >> sys.stderr, "Syntax error at line %d: 'begin' allready specified" % self.current_line
+         print("Syntax error at line %d: 'begin' allready specified" % self.current_line, file=sys.stderr)
          self.state = self.STATE_ERROR
          return
       self.cli.onecmd("sim")
@@ -75,7 +75,7 @@ class ScriptEngine():
 
    def _do_reset(self):
       if self.state <= self.STATE_BEGIN:
-         print >> sys.stderr, "Warning: 'reset' without changes ignored (line %d)" % self.current_line
+         print("Warning: 'reset' without changes ignored (line %d)" % self.current_line, file=sys.stderr)
          return
       self.cli.onecmd("stop")
       assert not self.simulation.is_active()
@@ -87,11 +87,11 @@ class ScriptEngine():
    def _do_linkfail(self, line):
       args = self._get_args(line)
       if not len(args) == 2:
-         print >> sys.stderr, "Syntax error at line %d: Wrong number of arguments for 'linkfail'" % self.current_line
+         print("Syntax error at line %d: Wrong number of arguments for 'linkfail'" % self.current_line, file=sys.stderr)
          self.state = self.STATE_ERROR
          return
       if not self.state > self.STATE_OPEN:
-         print >> sys.stderr, "Syntax error at line %d: Missing 'begin' statement before 'linkfail'" % self.current_line
+         print("Syntax error at line %d: Missing 'begin' statement before 'linkfail'" % self.current_line, file=sys.stderr)
          self.state = self.STATE_ERROR
          return
       self.cli.onecmd("linkfail %s %s" % (args[0], args[1]))
@@ -101,11 +101,11 @@ class ScriptEngine():
    def _do_assert(self, line):
       args = self._get_args(line)
       if not len(args) >= 5:
-         print >> sys.stderr, "Syntax error at line %d: Wrong number of arguments for 'assert'" % self.current_line
+         print("Syntax error at line %d: Wrong number of arguments for 'assert'" % self.current_line, file=sys.stderr)
          self.state = self.STATE_ERROR
          return
       if not self.state > self.STATE_OPEN:
-         print >> sys.stderr, "Syntax error at line %d: Missing 'begin' statement before 'assert'" % self.current_line
+         print("Syntax error at line %d: Missing 'begin' statement before 'assert'" % self.current_line, file=sys.stderr)
          self.state = self.STATE_ERROR
          return
       #if not self.state == self.STATE_SIM:
@@ -115,48 +115,48 @@ class ScriptEngine():
          self.loaddata = self._read_savedata()
          link_key = "%s###%s" % (args[1], args[2])
          if not self.loaddata or link_key not in self.loaddata:
-            print >> sys.stderr, "Warning: assertion not computed, no save data to compare with (line %d)" % self.current_line
+            print("Warning: assertion not computed, no save data to compare with (line %d)" % self.current_line, file=sys.stderr)
             return
          else:
             simpaths = self.simulation.path(args[1], args[2])[1]
             if not self.loaddata[link_key] == simpaths:
-               print >> sys.stderr, "     FAIL: Assertion failed for %s -> %s (line %d)" %  (self.current_line, args[1], args[2])
-               print >> sys.stderr, "      Got: %s" % ("\n           ".join(map(str, simpaths)))
-               print >> sys.stderr, " Expected: %s" % ("\n           ".join(map(str, self.loaddata[link_key])))
+               print("     FAIL: Assertion failed for %s -> %s (line %d)" %  (self.current_line, args[1], args[2]), file=sys.stderr)
+               print("      Got: %s" % ("\n           ".join(map(str, simpaths))), file=sys.stderr)
+               print(" Expected: %s" % ("\n           ".join(map(str, self.loaddata[link_key]))), file=sys.stderr)
                self.state = self.STATE_FAIL
                return
       elif args[3] == 'eq':
          expected = eval(" ".join(args[4:]))
          simpaths = self.simulation.path(args[1], args[2])[1]
          if not expected == simpaths:
-            print >> sys.stderr, "     FAIL: Assertion failed (line %d)" % self.current_line
-            print >> sys.stderr, "      Got: %s" % ("\n           ".join(map(str, simpaths)))
-            print >> sys.stderr, " Expected: %s" % ("\n           ".join(map(str, expected)))
+            print("     FAIL: Assertion failed (line %d)" % self.current_line, file=sys.stderr)
+            print("      Got: %s" % ("\n           ".join(map(str, simpaths))), file=sys.stderr)
+            print(" Expected: %s" % ("\n           ".join(map(str, expected))), file=sys.stderr)
             self.state = self.STATE_FAIL
             return
       else:
-         print >> sys.stderr, "Error: Not implemented.... (line %d)" % (self.current_line)
+         print("Error: Not implemented.... (line %d)" % (self.current_line), file=sys.stderr)
          return
 
    def _do_save(self, line):
       args = self._get_args(line)
       if not len(args) == 3:
-         print >> sys.stderr, "Syntax error at line %d: Wrong number of arguments for 'save'" % self.current_line
+         print("Syntax error at line %d: Wrong number of arguments for 'save'" % self.current_line, file=sys.stderr)
          self.state = self.STATE_ERROR
          return
       if not self.state == self.STATE_SIM:
-         print >> sys.stderr, "Warning: Not saving (line %d)" % self.current_line
+         print("Warning: Not saving (line %d)" % self.current_line, file=sys.stderr)
          return
       simpaths = self.simulation.path(args[1], args[2])[1]
       if not simpaths:
-         print >> sys.stderr, "Warning: Ignoring 'save' for non-existant path at line %d" % self.current_line
+         print("Warning: Ignoring 'save' for non-existant path at line %d" % self.current_line, file=sys.stderr)
          return
       link_key = "%s###%s" % (args[1], args[2])
       self.savedata[link_key] = simpaths
       
    def _do_end(self):
       if not self.state >= self.STATE_BEGIN:
-         print >> sys.stderr, "Syntax error at line %d: Missing 'begin' before 'end'" % self.current_line
+         print("Syntax error at line %d: Missing 'begin' before 'end'" % self.current_line, file=sys.stderr)
          self.state = self.STATE_ERROR
          return
       if self.savedata:
@@ -170,7 +170,7 @@ class ScriptEngine():
       try:
          fh = open(self.current_script + ".save", "r")
       except IOError:
-         print >> sys.stderr, "Warning: Could not open savefile"
+         print("Warning: Could not open savefile", file=sys.stderr)
          return {}
       retdata = {}
       for line in fh.readlines():
@@ -183,7 +183,7 @@ class ScriptEngine():
       try:
          fh = open(self.current_script + ".save", "w")
       except IOError:
-         print >> sys.stderr, "Warning: Could not open savefile for writing"
+         print("Warning: Could not open savefile for writing", file=sys.stderr)
          return
       for key in self.savedata:
          fh.write("%s %s\n" % (key, self.savedata[key].__repr__()))
