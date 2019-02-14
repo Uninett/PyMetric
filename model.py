@@ -334,7 +334,7 @@ class Model:
 
       for (u,v) in sp[:top]:
          if (u,v) in seen and pc[(u,v)] == pc[(v,u)]: continue
-         retval.append("%s (%s)" % (" <-> ".join([u,v]), pc[(u,v)]))
+         retval.append("%s (%d)" % (" <-> ".join([u,v]), pc[(u,v)]))
          seen[(u,v)] = True
          if (v,u) in sp and pc[(u,v)] == pc[(v,u)]:
             seen[(v,u)] = True         
@@ -807,7 +807,7 @@ class Simulation:
       seen = {}
       for (u,v) in sp[:top]:
          if (u,v) in seen and pc[(u,v)] == pc[(v,u)]: continue
-         retval.append("%s (%s)" % (" <-> ".join([u,v]), pc[(u,v)]))
+         retval.append("%s (%d)" % (" <-> ".join([u,v]), pc[(u,v)]))
          seen[(u,v)] = True
          if (v,u) in sp and pc[(u,v)] == pc[(v,u)]:
             seen[(v,u)] = True         
