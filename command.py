@@ -1445,6 +1445,13 @@ Available commands:
             End program.
             """
 
+   def help_exit(self):
+      print """
+            Usage: exit
+
+            End program.
+            """
+
    def help_areaplot(self):
       print """
             Usage: areaplot
@@ -1672,6 +1679,8 @@ Available commands:
          pass
       sys.exit(0)
 
+   def do_exit(self, arg):
+      self.do_quit(arg)
 
    # Private methods
    def _colormode(self, on):
