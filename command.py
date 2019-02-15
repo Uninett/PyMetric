@@ -943,7 +943,7 @@ class MetricShell(Cmd):
       length, paths = self.simulation.path(a,b)
 
       if not length and not paths:
-         print "No valid path from %s to %s in model"
+         print "No valid path from %s to %s in model" % (a, b)
          return
       
       print "Path from %s to %s:"\
@@ -1130,7 +1130,7 @@ class MetricShell(Cmd):
       length, paths = self.model.path(a,b)
 
       if not length and not paths:
-         print "No valid path from %s to %s in model"
+         print "No valid path from %s to %s in model" % (a, b)
          return
       
       print "Path from %s to %s:"\
